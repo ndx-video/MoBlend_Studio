@@ -1,32 +1,73 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Binaries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
 *.test
-
-# Code coverage profiles and other test artifacts
 *.out
+
+# Go
 coverage.*
 *.coverprofile
 profile.cov
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
 go.work
 go.work.sum
+/vendor/
 
-# env file
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.venv/
+venv/
 .env
+.env.*
+!.env.example
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# Node / frontend (Wails)
+node_modules/
+desktop/frontend/dist/
+desktop/frontend/node_modules/
+*.tsbuildinfo
+.npm/
+
+# Wails build output
+desktop/build/
+build/bin/
+*.syso
+
+# Blender / Mo.Blend runtime artifacts (local dev)
+*.blend1
+*.mo.blend.[0-9][0-9]
+crash_recovery.mo.blend
+.moblend/cache/
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~
+
+# IDE (local only)
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+logs/
