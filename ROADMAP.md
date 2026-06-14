@@ -21,7 +21,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 **Done when:**
 - Directory tree exists: `engine/`, `desktop/`, `clients/obs/`, `clients/sentinel/`, `scripts/`
 - `go.mod` at repo root (or under `desktop/`) and `pyproject.toml` under `engine/`
-- `scripts/dev` starts the engine stub; Wails opens an empty window
+- `scripts/dev.ps1` starts the engine stub; Wails opens an empty window
 
 **Out of scope:** Feature-complete engine, registry, or client UIs
 

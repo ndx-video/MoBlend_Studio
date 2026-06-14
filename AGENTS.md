@@ -36,7 +36,7 @@ desktop/         # Wails: Go backend + frontend/
 clients/obs/     # OBS browser dock
 clients/sentinel/# Sentinel UI (placement TBD)
 specs/           # PRDs and API contract
-scripts/         # Dev orchestration
+scripts/         # Dev orchestration (scripts/dev.ps1 on Windows)
 ROADMAP.md       # Milestone order (M0–M6)
 .progress/       # Append-only progress log (mandatory — see README)
 ```

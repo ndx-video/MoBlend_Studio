@@ -1,0 +1,22 @@
+[project]
+name = "moblend-engine"
+version = "0.0.0"
+description = "Mo.Blend Python engine (bpy platform + broker entrypoint)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []  # bpy is supplied by the Blender runtime; keep core deps minimal
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["moblend*"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
