@@ -1,6 +1,8 @@
-# Progress log
+# Dot Progress (super light-weight context engineering)
 
-Immutable audit trail for MoBlend_Studio development. Work tied to [ROADMAP.md](../ROADMAP.md) milestones is recorded here—not by editing old entries, but by **appending** new files.
+Dot Progress (.progress/) is an immutable audit trail technique which acts as a light weight context engineering solution for those who don't want the token (or cognitive) overhead of a comprehensive one. The work is tied to [ROADMAP.md](../ROADMAP.md) milestones, and is recorded here — not by editing old entries, but by **appending** new files.
+
+To use Dot Progress, simply copy this README.md file and tell your agent to implement it.
 
 This folder is **tracked in git**. Do not add `.progress/` to `.gitignore`.
 
