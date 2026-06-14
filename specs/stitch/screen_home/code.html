@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mo.Blend Studio - Template Gallery</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Style Guidance -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#343439",
+                        "surface-container-low": "#1a1b1f",
+                        "on-surface-variant": "#c8c4d7",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#f8f7ff",
+                        "secondary": "#aec6ff",
+                        "tertiary-container": "#717178",
+                        "on-secondary": "#002e6a",
+                        "surface-tint": "#c6bfff",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-surface": "#e3e2e7",
+                        "secondary-fixed-dim": "#aec6ff",
+                        "outline": "#928ea0",
+                        "on-primary-fixed": "#160066",
+                        "inverse-surface": "#e3e2e7",
+                        "tertiary": "#c6c6ce",
+                        "on-primary": "#2900a0",
+                        "tertiary-fixed-dim": "#c6c6ce",
+                        "surface-container": "#1e1f24",
+                        "surface-container-highest": "#343439",
+                        "tertiary-fixed": "#e3e1ea",
+                        "surface-container-high": "#292a2e",
+                        "primary-container": "#6c5ce7",
+                        "on-tertiary-fixed-variant": "#46464d",
+                        "surface": "#121317",
+                        "primary-fixed": "#e4dfff",
+                        "surface-bright": "#38393d",
+                        "primary": "#c6bfff",
+                        "secondary-container": "#0061d1",
+                        "on-tertiary": "#2f3036",
+                        "primary-fixed-dim": "#c6bfff",
+                        "on-tertiary-fixed": "#1a1b21",
+                        "on-background": "#e3e2e7",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-secondary-container": "#dbe4ff",
+                        "on-primary-fixed-variant": "#4029ba",
+                        "background": "#121317",
+                        "outline-variant": "#474554",
+                        "surface-dim": "#121317",
+                        "inverse-primary": "#5847d2",
+                        "on-primary-container": "#faf6ff",
+                        "surface-container-lowest": "#0d0e12",
+                        "inverse-on-surface": "#2f3034",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#001a42",
+                        "on-secondary-fixed-variant": "#004395"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "unit": "4px",
+                        "container-margin": "12px",
+                        "sm": "8px",
+                        "xl": "48px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "panel-gutter": "1px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-label": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "title-sm": ["16px", { "lineHeight": "1.5", "fontWeight": "500" }],
+                        "label-caps": ["10px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "mono-label": ["11px", { "lineHeight": "1.4", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar to match minimal style */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D2E35;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #474554;
+        }
+        
+        /* Utility for 16:9 aspect ratio */
+        .aspect-w-16 {
+            position: relative;
+            padding-bottom: 56.25%;
+        }
+        .aspect-w-16 > * {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-sm text-body-sm h-screen flex overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Shared Component: SideNavBar -->
+<nav class="bg-surface-container h-screen w-16 md:w-20 flex flex-col border-r border-outline-variant fixed left-0 top-0 h-full z-40 transition-all duration-300">
+<!-- Brand/Avatar Area -->
+<div class="h-16 flex items-center justify-center border-b border-outline-variant shrink-0">
+<div class="w-8 h-8 rounded-DEFAULT bg-primary-container text-on-primary-container flex items-center justify-center font-headline-md text-headline-md font-bold text-primary">
+                M
+            </div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto py-sm flex flex-col gap-unit">
+<!-- Active Tab: Home -->
+<a class="flex flex-col items-center justify-center py-sm mx-xs rounded-DEFAULT cursor-pointer active:scale-95 text-primary border-l-2 border-primary bg-surface-variant hover:bg-surface-container-high transition-colors" href="#" title="Home">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-caps text-label-caps mt-1 hidden md:block">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center py-sm mx-xs rounded-DEFAULT cursor-pointer active:scale-95 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#" title="My Projects">
+<span class="material-symbols-outlined">folder_special</span>
+<span class="font-label-caps text-label-caps mt-1 hidden md:block text-center px-1">Projects</span>
+</a>
+<a class="flex flex-col items-center justify-center py-sm mx-xs rounded-DEFAULT cursor-pointer active:scale-95 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#" title="Assets">
+<span class="material-symbols-outlined">layers</span>
+<span class="font-label-caps text-label-caps mt-1 hidden md:block">Assets</span>
+</a>
+<a class="flex flex-col items-center justify-center py-sm mx-xs rounded-DEFAULT cursor-pointer active:scale-95 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#" title="Suite Manager">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="font-label-caps text-label-caps mt-1 hidden md:block text-center px-1">Suite</span>
+</a>
+</div>
+<!-- Bottom Action -->
+<div class="pb-md pt-sm border-t border-outline-variant flex flex-col items-center">
+<a class="flex flex-col items-center justify-center py-sm mx-xs w-full rounded-DEFAULT cursor-pointer active:scale-95 text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#" title="Help">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps mt-1 hidden md:block">Help</span>
+</a>
+<!-- Avatar Placeholder per JSON context -->
+<div class="mt-sm w-8 h-8 rounded-full bg-surface-variant border border-outline flex items-center justify-center overflow-hidden cursor-pointer">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">person</span>
+</div>
+</div>
+</nav>
+<!-- Main Workspace Area -->
+<div class="flex-1 flex flex-col ml-16 md:ml-20 h-screen relative">
+<!-- Shared Component: TopNavBar -->
+<header class="bg-surface-container fixed top-0 right-0 left-0 h-12 flex justify-between items-center px-md z-50 ml-16 md:ml-20 border-b border-outline-variant">
+<!-- Left: Brand / Context -->
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-black text-primary">Mo.Blend Studio</span>
+<div class="h-4 w-px bg-outline-variant mx-sm"></div>
+<div class="flex items-center gap-md">
+<!-- JSON indicates text links -->
+<span class="font-title-sm text-title-sm text-on-surface-variant cursor-pointer hover:text-primary transition-opacity flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">folder</span>
+                        Project: Neon_Pulse_01
+                    </span>
+<span class="font-title-sm text-title-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+                        Status: Rendering...
+                    </span>
+</div>
+</div>
+<!-- Right: Actions -->
+<div class="flex items-center gap-md">
+<!-- Icon Actions -->
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-colors hover:text-primary">
+<span class="material-symbols-outlined">history</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-DEFAULT text-on-surface-variant hover:bg-surface-container-high transition-colors hover:text-primary">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-4 w-px bg-outline-variant mx-xs"></div>
+<!-- Text Actions -->
+<button class="font-title-sm text-title-sm px-3 py-1.5 rounded-DEFAULT border border-outline-variant text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 flex items-center gap-1">
+                    Save
+                </button>
+<button class="font-title-sm text-title-sm px-3 py-1.5 rounded-DEFAULT bg-primary-container text-on-primary-container hover:brightness-110 transition-all active:scale-95 flex items-center gap-1 font-medium shadow-[0_0_12px_rgba(108,92,231,0.3)]">
+<span class="material-symbols-outlined text-[18px]">ios_share</span>
+                    Export
+                </button>
+</div>
+</header>
+<!-- Canvas / Gallery Content -->
+<main class="flex-1 overflow-y-auto mt-12 bg-background pt-lg px-lg pb-xl flex flex-col gap-lg">
+<!-- Search & Filters Section -->
+<section class="flex flex-col gap-md sticky top-0 bg-background/95 backdrop-blur-md z-30 pb-sm -mx-lg px-lg pt-2 border-b border-outline-variant/50">
+<!-- Search Bar -->
+<div class="relative max-w-2xl w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-DEFAULT py-2 pl-10 pr-4 font-body-md text-body-md text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all" placeholder="Search templates, categories, or keywords..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-DEFAULT hover:bg-surface-variant text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+</div>
+<!-- Chips Row -->
+<div class="flex items-center gap-3 overflow-x-auto pb-1 no-scrollbar">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider shrink-0 mr-2">Categories</span>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-primary-container text-on-primary-container font-title-sm text-title-sm font-medium border border-transparent shadow-[0_0_8px_rgba(108,92,231,0.2)]">All Templates</button>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm">Lower Thirds</button>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm">Tickers</button>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm">Menu Boards</button>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm">Transitions</button>
+<button class="shrink-0 px-3 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface hover:bg-surface-variant hover:text-primary transition-colors font-title-sm text-title-sm">Logo Reveals</button>
+<div class="h-4 w-px bg-outline-variant mx-1 shrink-0"></div>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider shrink-0 mr-1 ml-1">Format</span>
+<button class="shrink-0 px-2 py-1 rounded-DEFAULT bg-surface-variant text-on-surface font-mono-label text-mono-label border border-outline-variant hover:border-primary transition-colors">16:9</button>
+<button class="shrink-0 px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant font-mono-label text-mono-label border border-outline-variant hover:border-primary transition-colors">9:16</button>
+<button class="shrink-0 px-2 py-1 rounded-DEFAULT bg-surface-container text-on-surface-variant font-mono-label text-mono-label border border-outline-variant hover:border-primary transition-colors">1:1</button>
+</div>
+</section>
+<!-- Gallery Groups -->
+<!-- Group: Recently Used -->
+<section class="flex flex-col gap-sm">
+<div class="flex items-center gap-2 mb-xs border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Recently Used</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
+<!-- Selected Card Example -->
+<div class="group relative flex flex-col bg-surface-container rounded-DEFAULT border border-primary-container ring-2 ring-primary-container ring-offset-2 ring-offset-background overflow-hidden cursor-pointer">
+<div class="aspect-w-16 bg-surface-container-highest border-b border-outline-variant relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-surface-container to-surface-variant z-0"></div>
+<img alt="Thumbnail" class="object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300 relative z-10" data-alt="A precise, high-performance digital motion graphics template preview showing a sleek, futuristic lower third graphic. The graphic features crisp lines, a minimalist electric blue-violet accent, and is set against a dark, corporate modern studio background. The lighting is focused and cinematic, highlighting the typography and dynamic geometric shapes. The overall mood is professional, immersive, and ready for broadcast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhVdKK4VXiA3DrKeAsiHq34d8JkjRuSd-p4Why7H9jwBd1Sd4xPlwgk3rlHT95DF5dJrWpSNIJMCOKu5uXx_SHJL2o7v6Kop_PaQOyU0-WJfEFiUSdor9aINaep7duJmDc8ppW_Hic39BAsl4ccPqBEESQUz5k63lv7a4nHx37LVIW9iNh-653i14O5QevkVXI69X_0avaJVGzYLonPtei5qKnZ1OAHZuQVvkdnPF-zhjdq_30JW2C4lHRa766ZxUJl7jCzJS4kFTy"/>
+<!-- Badges Overlay -->
+<div class="absolute top-2 left-2 flex gap-1 z-20">
+<span class="bg-surface-container-highest/90 backdrop-blur text-on-surface font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-outline-variant shadow-sm">16:9</span>
+<span class="bg-primary-container/20 text-primary font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-primary-container/30 shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">layers</span>Alpha
+                                </span>
+</div>
+<!-- Hover Action Overlay -->
+<div class="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-30">
+<button class="bg-primary-container text-on-primary-container font-title-sm text-title-sm px-4 py-2 rounded-DEFAULT shadow-lg flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+                                    Use Template
+                                </button>
+</div>
+</div>
+<div class="p-sm flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-title-sm text-title-sm text-on-surface truncate pr-2">Cyber_LowerThird_V2</h3>
+<button class="text-on-surface-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lower Thirds</span>
+</div>
+</div>
+<!-- Standard Card -->
+<div class="group relative flex flex-col bg-surface-container rounded-DEFAULT border border-outline-variant hover:border-outline transition-colors overflow-hidden cursor-pointer">
+<div class="aspect-w-16 bg-surface-container-highest border-b border-outline-variant relative overflow-hidden">
+<img alt="Thumbnail" class="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300" data-alt="A clean, minimalist motion graphics ticker template preview displayed on a dark background. The ticker features a continuous flow of mock financial data in high-contrast white and electric blue typography. The design aesthetic is corporate modern, with subtle tonal layers creating depth without heavy shadows. The lighting is even and screen-ready, emphasizing clarity and information density." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLWaih9ws7B4A_Lxk4GqzlWg5x-4xSxSoV_dJXD12y_HDa7s1A6Sew-qBbiLis_so0bM7X8hOam-1T7CrAHDcZ49syGInF76DVQp8rFiUvhHDuCSpAxmL5zQtj8BwTGv2FeBpvwAI4gcJljNWv9BGQLTVtu-EhKx3W5BaycDukg077dtQ4t-9ojdzZlV4TRd4ij0e0Z15u_YTVHAUFT997R7647MnhWaw8EdVZnWaWTHoh01PyxuqWEvvldzhThFQWK4Tf_zbuvsdz"/>
+<div class="absolute top-2 left-2 flex gap-1 z-20">
+<span class="bg-surface-container-highest/90 backdrop-blur text-on-surface font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-outline-variant shadow-sm">16:9</span>
+</div>
+<div class="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-30">
+<button class="bg-primary-container text-on-primary-container font-title-sm text-title-sm px-4 py-2 rounded-DEFAULT shadow-lg flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+                                    Use Template
+                                </button>
+</div>
+</div>
+<div class="p-sm flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-title-sm text-title-sm text-on-surface truncate pr-2">Corporate_Ticker_Base</h3>
+<button class="text-on-surface-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Tickers</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Group: Broadcast -->
+<section class="flex flex-col gap-sm mt-md">
+<div class="flex items-center gap-2 mb-xs border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary">live_tv</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Broadcast Ready</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
+<!-- Card 3 -->
+<div class="group relative flex flex-col bg-surface-container rounded-DEFAULT border border-outline-variant hover:border-outline transition-colors overflow-hidden cursor-pointer">
+<div class="aspect-w-16 bg-surface-container-highest border-b border-outline-variant relative overflow-hidden">
+<img alt="Thumbnail" class="object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-300" data-alt="A sophisticated broadcast news intro template preview. The scene shows a 3D globe visualization constructed from precise wireframes and subtle data points, colored in deep dark mode hues with striking primary accent highlights. The aesthetic is high-end television production, utilizing minimal shadows and emphasizing crisp lines. The mood is authoritative, immersive, and technologically advanced." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo1BkQoaGjEhNC3NJh1JcfUpUdF-hH1yTAGauI7ECcruxxXY0iQa0xEfshRKvRQePI1cNdCt-nDO2QxskTCrEJG1oU2MbqaaPHbIcTO8D4Gs8ebhyyEhkW2mKmJ8CDsIBJLUDtGyqhplBMGpFWl3XunLi6BPBfvUL6n-k-7u9yHcmjJxajjWXSYyyFE8H9T7CEEL9rnECfkbzoQiNQy9FKdB_MnS9R42kE_lyObPx5JSdUwkaZn1rwM-w2OapiJFcl_ez5WnwRW3-n"/>
+<div class="absolute top-2 left-2 flex gap-1 z-20">
+<span class="bg-surface-container-highest/90 backdrop-blur text-on-surface font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-outline-variant shadow-sm">16:9</span>
+<span class="bg-primary-container/20 text-primary font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-primary-container/30 shadow-sm flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[10px]">layers</span>Alpha
+                                </span>
+</div>
+<div class="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-30">
+<button class="bg-primary-container text-on-primary-container font-title-sm text-title-sm px-4 py-2 rounded-DEFAULT shadow-lg flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+                                    Use Template
+                                </button>
+</div>
+</div>
+<div class="p-sm flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-title-sm text-title-sm text-on-surface truncate pr-2">News_Intro_Global</h3>
+<button class="text-on-surface-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Transitions</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group relative flex flex-col bg-surface-container rounded-DEFAULT border border-outline-variant hover:border-outline transition-colors overflow-hidden cursor-pointer">
+<div class="aspect-w-16 bg-surface-container-highest border-b border-outline-variant relative overflow-hidden">
+<div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-surface-variant to-surface-container-highest z-0"></div>
+<div class="absolute inset-0 flex items-center justify-center z-10">
+<span class="text-on-surface-variant font-headline-lg text-headline-lg opacity-30">SPLIT</span>
+</div>
+<div class="absolute top-2 left-2 flex gap-1 z-20">
+<span class="bg-surface-container-highest/90 backdrop-blur text-on-surface font-mono-label text-mono-label px-1.5 py-0.5 rounded-sm border border-outline-variant shadow-sm">16:9</span>
+</div>
+<div class="absolute inset-0 bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-30">
+<button class="bg-primary-container text-on-primary-container font-title-sm text-title-sm px-4 py-2 rounded-DEFAULT shadow-lg flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-all">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+                                    Use Template
+                                </button>
+</div>
+</div>
+<div class="p-sm flex flex-col gap-xs">
+<div class="flex justify-between items-start">
+<h3 class="font-title-sm text-title-sm text-on-surface truncate pr-2">Split_Screen_Duo</h3>
+<button class="text-on-surface-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Layouts</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

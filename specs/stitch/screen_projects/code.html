@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Projects | MotionStudio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #121317;
+            color: #e3e2e7;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2D2E35;
+            border-radius: 999px;
+        }
+        .project-card:hover .project-overlay {
+            opacity: 1;
+        }
+        .custom-gradient {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-tint": "#c6bfff",
+                    "on-tertiary": "#2f3036",
+                    "primary-fixed-dim": "#c6bfff",
+                    "on-tertiary-fixed": "#1a1b21",
+                    "surface": "#121317",
+                    "on-primary-fixed-variant": "#4029ba",
+                    "surface-container-highest": "#343439",
+                    "surface-dim": "#121317",
+                    "primary": "#c6bfff",
+                    "surface-container-lowest": "#0d0e12",
+                    "primary-fixed": "#e4dfff",
+                    "on-surface-variant": "#c8c4d7",
+                    "on-secondary-fixed": "#001a42",
+                    "primary-container": "#6c5ce7",
+                    "secondary-container": "#0061d1",
+                    "on-primary-container": "#faf6ff",
+                    "on-error": "#690005",
+                    "on-surface": "#e3e2e7",
+                    "error-container": "#93000a",
+                    "tertiary-container": "#717178",
+                    "surface-bright": "#38393d",
+                    "on-primary": "#2900a0",
+                    "on-secondary": "#002e6a",
+                    "on-tertiary-fixed-variant": "#46464d",
+                    "secondary-fixed-dim": "#aec6ff",
+                    "secondary": "#aec6ff",
+                    "outline-variant": "#474554",
+                    "inverse-primary": "#5847d2",
+                    "surface-container": "#1e1f24",
+                    "surface-container-low": "#1a1b1f",
+                    "inverse-surface": "#e3e2e7",
+                    "on-secondary-container": "#dbe4ff",
+                    "surface-variant": "#343439",
+                    "tertiary-fixed": "#e3e1ea",
+                    "on-tertiary-container": "#f8f7ff",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-primary-fixed": "#160066",
+                    "error": "#ffb4ab",
+                    "on-background": "#e3e2e7",
+                    "background": "#121317",
+                    "on-error-container": "#ffdad6",
+                    "tertiary-fixed-dim": "#c6c6ce",
+                    "outline": "#928ea0",
+                    "inverse-on-surface": "#2f3034",
+                    "tertiary": "#c6c6ce",
+                    "surface-container-high": "#292a2e",
+                    "secondary-fixed": "#d8e2ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "panel-gutter": "1px",
+                    "md": "16px",
+                    "xs": "4px",
+                    "container-margin": "12px",
+                    "unit": "4px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "title-sm": ["Inter"],
+                    "mono-label": ["JetBrains Mono"],
+                    "headline-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "title-sm": ["16px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                    "mono-label": ["11px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "label-caps": ["10px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-sm": ["12px", {"lineHeight": "1.5", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="flex bg-background text-on-background">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full z-50 flex flex-col py-md bg-surface-container border-r border-outline-variant h-screen w-16 md:w-20 transition-all duration-200 ease-in-out">
+<div class="flex flex-col items-center gap-lg mb-auto">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center mb-md">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">motion_mode</span>
+</div>
+<nav class="flex flex-col gap-sm w-full">
+<!-- Home (Inactive) -->
+<a class="group relative flex items-center justify-center py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">home</span>
+</a>
+<!-- Projects (Active) -->
+<a class="group relative flex items-center justify-center py-sm text-primary border-l-2 border-primary bg-primary/10 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">folder_special</span>
+</a>
+<!-- Assets -->
+<a class="group relative flex items-center justify-center py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+</a>
+<!-- Suite Manager -->
+<a class="group relative flex items-center justify-center py-sm text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings_applications</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto flex flex-col items-center gap-lg">
+<a class="text-on-surface-variant hover:text-on-surface" href="#">
+<span class="material-symbols-outlined">help</span>
+</a>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Workspace Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTxbJknQx7pIqLdKbk-yErxqLWOCwWXL0Ua_Ye6Xo7_-OlsVn2lpehUZ83g70-51FGXjz7lhGQthQ8ag9DhUuEEmWs_FQZD3DGcmIH5xDq2-SJlTAGGUqbaGhXTg1T_niiYw6KLZ3B2V6Xr4U-mgE95TYZQBUOnxsPycLtnD1aRpmEDLMyauDTZubPJ2atcsBAoNomp3SbNoiEF1CgQGfJ_WcvqVmgTpd-ZC6b-t1d-faerLDr6wM9VCuljWMBi40pxG49Jl8aHUVu"/>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 ml-16 md:ml-20 flex flex-col min-h-screen">
+<!-- TopAppBar Anchor -->
+<header class="sticky top-0 right-0 w-full z-40 flex justify-between items-center px-lg h-12 bg-surface-container border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary">Editor</span>
+<nav class="hidden md:flex gap-md ml-lg">
+<button class="font-title-sm text-title-sm text-on-surface-variant hover:bg-surface-container-high px-xs rounded transition-all duration-150">File</button>
+<button class="font-title-sm text-title-sm text-on-surface-variant hover:bg-surface-container-high px-xs rounded transition-all duration-150">Edit</button>
+<button class="font-title-sm text-title-sm text-on-surface-variant hover:bg-surface-container-high px-xs rounded transition-all duration-150">View</button>
+<button class="font-title-sm text-title-sm text-on-surface-variant hover:bg-surface-container-high px-xs rounded transition-all duration-150">Window</button>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs pr-md border-r border-outline-variant">
+<span class="material-symbols-outlined text-primary text-[20px]">cloud_done</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Syncing...</span>
+</div>
+<button class="text-on-surface-variant hover:bg-surface-container-high p-xs rounded transition-all duration-150">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+<button class="font-title-sm text-title-sm px-md py-xs border border-outline-variant rounded hover:bg-surface-container-high transition-all duration-150">Save</button>
+<button class="font-title-sm text-title-sm px-md py-xs bg-primary-container text-on-primary-container rounded font-medium hover:opacity-90 transition-all duration-150">Export</button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-lg md:p-xl max-w-7xl mx-auto w-full">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-xl">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">My Projects</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Manage and organize your creative motion graphics.</p>
+</div>
+<button class="flex items-center gap-sm px-lg py-md custom-gradient text-on-primary-container rounded-lg font-title-sm text-title-sm shadow-lg hover:shadow-primary/20 transition-all">
+<span class="material-symbols-outlined">add_circle</span>
+                    New Project
+                </button>
+</div>
+<!-- Filters Bar -->
+<div class="flex flex-col md:flex-row gap-md mb-lg p-sm bg-surface-container rounded-xl border border-outline-variant items-center justify-between">
+<div class="flex items-center gap-md w-full md:w-auto">
+<div class="relative flex-1 md:w-64">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full bg-surface-container-high border-none rounded-lg pl-xl pr-md py-sm font-body-md text-body-md focus:ring-1 focus:ring-primary" placeholder="Search projects..." type="text"/>
+</div>
+<div class="flex gap-xs">
+<button class="p-sm text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+<button class="p-sm text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-colors">
+<span class="material-symbols-outlined">view_list</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-md w-full md:w-auto overflow-x-auto">
+<div class="flex items-center gap-sm">
+<span class="font-label-caps text-label-caps text-outline uppercase">Sort by:</span>
+<select class="bg-transparent border-none font-body-sm text-body-sm text-primary focus:ring-0 cursor-pointer">
+<option class="bg-surface-container">Recently Edited</option>
+<option class="bg-surface-container">Name (A-Z)</option>
+<option class="bg-surface-container">Status</option>
+</select>
+</div>
+<div class="h-4 w-[1px] bg-outline-variant hidden md:block"></div>
+<div class="flex gap-sm">
+<button class="px-md py-xs rounded-full bg-primary/10 text-primary font-label-caps text-label-caps border border-primary/20">All</button>
+<button class="px-md py-xs rounded-full hover:bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps border border-outline-variant">Drafts</button>
+<button class="px-md py-xs rounded-full hover:bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps border border-outline-variant">Rendered</button>
+</div>
+</div>
+</div>
+<!-- Bento Grid of Projects -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<!-- Project Card 1 (Active/Draft) -->
+<div class="project-card group bg-surface-container rounded-xl overflow-hidden border border-outline-variant hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sophisticated 3D motion design scene featuring glowing abstract nodes and fluid digital lines. The lighting is dramatic and cinematic, highlighting deep indigo and violet gradients against a dark charcoal background. The atmosphere is high-tech and professional, evoking a complex data visualization project in progress." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEcL3pORXr6666IJ_uNPrs77RD0pmz1tuEHXEpkmu2zbWQl3AUpV5GXzWMDQKBNthPNR8hy449QvcMTXOCTq3l7SMREVULLlW1B2myg4Ocbnb8Aw7680rN-2SqVkd6fx33stkLq3J1zKXN9Woj_KeLtHGIor_5kCeNpMquoXeN5mGzlpBrBzHwG3sGSP0W6QDMrz0O6eonlxuQsQsuPZIS5VTq0iRYKWbOgKvnpSYfigVtWxMV6SPlzpKZwn5DGGdAp1tyyZILH-0l"/>
+<div class="project-overlay absolute inset-0 bg-background/60 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-md">
+<button class="p-md rounded-full bg-primary text-on-primary shadow-xl">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="p-md rounded-full bg-surface-container text-on-surface shadow-xl border border-outline-variant">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<div class="absolute top-sm right-sm px-md py-xs bg-surface/80 backdrop-blur-md rounded-full border border-outline-variant">
+<span class="font-label-caps text-label-caps text-on-surface">Draft</span>
+</div>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-on-surface group-hover:text-primary transition-colors">Neo-Vortex Identity</h3>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-md">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">schedule</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Edited 2h ago</span>
+</div>
+<span class="font-mono-label text-mono-label text-outline uppercase tracking-wider">Motion</span>
+</div>
+</div>
+</div>
+<!-- Project Card 2 (Rendered) -->
+<div class="project-card group bg-surface-container rounded-xl overflow-hidden border border-outline-variant hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-quality 3D render of a futuristic computer hardware component with glowing cooling systems and intricate mechanical details. The scene uses a deep dark theme with electric blue accents and soft bokeh backgrounds. The lighting is precision-engineered to show off textures and premium industrial design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmXrNUIIE65CL4rkNTkVLhPnCHVdBO0Hz5Dno57_KNEuf5hh3F5zGjH7JP1AjUtWFA2-QazTq3zI1nnQzEzSwXRxunhGYb2ulzv3D3RVj0Nwjh5rCkVOFYy4O-s9cvwe_VuXBhuXhpT3AwZDzP9jCVr8AvROXGuH5i1WWREcP-BMiSLtOwhFjwZ2m5ilX4KZKI73Ql4moXXHvjyg5g1ZWG8KTqIlKvNH3Oa5TYmhmQyOp1CAnpT144Jfrzq65IG5V5lFW7BwSAenTF"/>
+<div class="project-overlay absolute inset-0 bg-background/60 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-md">
+<button class="p-md rounded-full bg-primary text-on-primary shadow-xl">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="p-md rounded-full bg-surface-container text-on-surface shadow-xl border border-outline-variant">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<div class="absolute top-sm right-sm px-md py-xs bg-secondary-container/80 backdrop-blur-md rounded-full border border-outline-variant">
+<span class="font-label-caps text-label-caps text-on-secondary-container">Rendered</span>
+</div>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-on-surface group-hover:text-primary transition-colors">Tech-Core Commercial</h3>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-md">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">schedule</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Edited 1d ago</span>
+</div>
+<span class="font-mono-label text-mono-label text-outline uppercase tracking-wider">Commercial</span>
+</div>
+</div>
+</div>
+<!-- Project Card 3 (Published) -->
+<div class="project-card group bg-surface-container rounded-xl overflow-hidden border border-outline-variant hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An abstract motion graphics background featuring soft, organic 3D shapes in a color palette of deep navy, lavender, and muted grey. The composition is minimalist and elegant, with soft studio lighting and smooth shadows. The overall aesthetic is calm, professional, and visually sophisticated for a corporate branding project." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6P9Qnyume3jOmoieqJm99wnlaldFhJvCvkGRvCtbuhFkoVZ0G-EVSEM0-eYdxSXOyhcfqQ_Yzby_1TwlvjfucanFSgFDgxIvxo076MIrr5ZEkCOYL1jWry6t9KceBZNYO5DpxdrZptUyAq8IbW3PRbjJ9G57DbS3dBshv_sPqXf5tbVPbGJpbVcSG4pdflEk94X9nGxRiXRoFw-xESFTpLm_qym2MOmkZh5EurQzXhLMsmpYDLymjuVVWrCn5bE-kKUjMSVoAFdJ8"/>
+<div class="project-overlay absolute inset-0 bg-background/60 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-md">
+<button class="p-md rounded-full bg-primary text-on-primary shadow-xl">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="p-md rounded-full bg-surface-container text-on-surface shadow-xl border border-outline-variant">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<div class="absolute top-sm right-sm px-md py-xs bg-primary/20 backdrop-blur-md rounded-full border border-primary/30">
+<span class="font-label-caps text-label-caps text-primary">Published</span>
+</div>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-on-surface group-hover:text-primary transition-colors">Corporate Branding 2024</h3>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-md">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">schedule</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Edited 3d ago</span>
+</div>
+<span class="font-mono-label text-mono-label text-outline uppercase tracking-wider">Social</span>
+</div>
+</div>
+</div>
+<!-- Project Card 4 (Draft) -->
+<div class="project-card group bg-surface-container rounded-xl overflow-hidden border border-outline-variant hover:border-primary/50 transition-all duration-300">
+<div class="relative aspect-video overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A vibrant and energetic motion graphics scene with bold geometric patterns and dynamic typography. The style is modern and punchy, featuring high-contrast colors like neon purple and deep black. The lighting is sharp and graphic, creating a high-energy look suitable for a sports or music event intro." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbTMozu7MxSM3LjTMy7wH0IeraYil2TB8s6dg_amys5FyX_gBOQZhUQpf6_wx_BAzg5RXA2r-OJURbLaqeaF98ECsU0HZ3ZYu7qeEbfypUb5-vuhpVZzBNrA0irPMQBYkl8irThHfgei7t05zQwmjbkvRfMApirX3srv8nYLELndVjXQ6tmPD2Psc4dVKc5yINwjk4hJE1dZ4KGAcUFEsO4hFkdfEpQUqH3Iz3ZdEKoZG51WKEMAdIkx6KAX4n8gS0qgcekZVewhRh"/>
+<div class="project-overlay absolute inset-0 bg-background/60 opacity-0 transition-opacity duration-300 flex items-center justify-center gap-md">
+<button class="p-md rounded-full bg-primary text-on-primary shadow-xl">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<button class="p-md rounded-full bg-surface-container text-on-surface shadow-xl border border-outline-variant">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<div class="absolute top-sm right-sm px-md py-xs bg-surface/80 backdrop-blur-md rounded-full border border-outline-variant">
+<span class="font-label-caps text-label-caps text-on-surface">Draft</span>
+</div>
+</div>
+<div class="p-md">
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-title-sm text-title-sm text-on-surface group-hover:text-primary transition-colors">Event Opener v2</h3>
+<button class="text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="flex items-center justify-between mt-md">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">schedule</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Edited 5d ago</span>
+</div>
+<span class="font-mono-label text-mono-label text-outline uppercase tracking-wider">Event</span>
+</div>
+</div>
+</div>
+<!-- Add Project Empty State -->
+<button class="group bg-surface-container rounded-xl border border-dashed border-outline-variant hover:border-primary hover:bg-primary/5 transition-all duration-300 flex flex-col items-center justify-center aspect-video md:aspect-auto">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-300">
+<span class="material-symbols-outlined text-outline group-hover:text-primary text-[32px]">add</span>
+</div>
+<p class="font-title-sm text-title-sm text-on-surface-variant mt-md group-hover:text-primary transition-colors">Start a new project</p>
+</button>
+</div>
+<!-- Pagination/Footer -->
+<div class="mt-xl flex items-center justify-between border-t border-outline-variant pt-lg">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 4 of 28 projects</span>
+<div class="flex items-center gap-sm">
+<button class="p-sm rounded border border-outline-variant hover:bg-surface-container-high disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<div class="flex gap-xs">
+<button class="w-8 h-8 rounded bg-primary text-on-primary font-body-sm text-body-sm">1</button>
+<button class="w-8 h-8 rounded border border-outline-variant hover:bg-surface-container-high font-body-sm text-body-sm">2</button>
+<button class="w-8 h-8 rounded border border-outline-variant hover:bg-surface-container-high font-body-sm text-body-sm text-on-surface-variant">3</button>
+<span class="px-xs text-outline">...</span>
+<button class="w-8 h-8 rounded border border-outline-variant hover:bg-surface-container-high font-body-sm text-body-sm text-on-surface-variant">7</button>
+</div>
+<button class="p-sm rounded border border-outline-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-4px)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.style.boxShadow = '0 0 0 1px #6c5ce7';
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.style.boxShadow = 'none';
+        });
+    </script>
+</body></html>

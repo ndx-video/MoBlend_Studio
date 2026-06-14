@@ -1,0 +1,165 @@
+================================================================================
+GOOGLE STITCH PROMPT — Mo.Blend Studio (Desktop Motion-Graphics App)
+================================================================================
+Paste everything below the line into https://stitch.withgoogle.com/
+Target: a desktop web app UI (wide, multi-panel layout — NOT mobile).
+Goal: a Canva/CapCut-style "no-nodes" motion-graphics editor for casual users
+who need broadcast and digital-signage graphics fast.
+--------------------------------------------------------------------------------
+
+Design a desktop application called "Mo.Blend Studio" — a fast, lightweight
+motion-graphics editor for non-technical users (marketers, broadcast operators,
+digital-signage managers, small content teams). It is the Canva/CapCut of motion
+graphics: users pick a professionally made template, change a few simple controls
+(text, colors, logo, duration), watch a live preview, and export. There are NO
+node graphs, NO keyframes, NO timelines full of curves — everything is driven by
+simple form-style controls. Hide all technical complexity.
+
+PRIMARY USE CASES the UI must speak to:
+- Broadcast / live video: lower thirds (name + title overlays), news/info
+  tickers, breaking-news stingers, "starting soon" / countdown holding screens,
+  sports score bugs, logo bugs, transition stingers. Many of these need a
+  transparent (alpha) background for keying over live video.
+- Digital signage: restaurant menu boards, retail promo/sale loops, lobby and
+  welcome screens, event schedules, wayfinding, social-media walls. These run on
+  large landscape and portrait screens and often loop forever.
+
+OVERALL AESTHETIC / DESIGN SYSTEM:
+- Modern, professional dark theme (like Premiere Pro, After Effects, CapCut,
+  DaVinci Resolve) — deep charcoal/near-black panels (#16171B / #1E1F25),
+  subtle borders, soft elevation.
+- One vibrant accent color used sparingly for primary actions, active states,
+  and selections — an electric blue-violet / indigo gradient (think #6C5CE7 to
+  #4C8DFF). Use it for the play button, primary "Export" button, active tab,
+  selected template ring, and slider fills.
+- Clean sans-serif typography (Inter / SF Pro style). Generous spacing, rounded
+  corners (8–12px), card-based layouts, smooth subtle shadows.
+- Friendly and approachable but still "pro tool" — confident, not childish.
+- Iconography: simple line icons (Lucide/Feather style).
+
+BUILD THE FOLLOWING SCREENS:
+
+================================================================================
+SCREEN 1 — HOME / TEMPLATE GALLERY (the landing screen)
+================================================================================
+A browse-and-pick screen so a casual user can find the right template in seconds.
+
+- Left vertical navigation rail (icon + label): Home, My Projects, Assets,
+  Suite Manager (settings/health), Help. A small Mo.Blend logo at the top.
+- Top bar: a large prominent search field ("Search templates…"), and on the
+  right a "New from blank" button plus a user avatar.
+- A horizontal row of CATEGORY FILTER CHIPS directly under the search:
+  "All", "Lower Thirds", "Tickers", "Countdown / Holding", "Score Bugs",
+  "Stingers", "Menu Boards", "Promo Loops", "Welcome Screens", "Event Schedules".
+- A second row of FORMAT/ASPECT filter chips: "16:9 (1080p)", "9:16 Vertical",
+  "4:5", "Ultrawide Signage", "Portrait Signage", "With Transparency (Alpha)".
+- The main area is a responsive GRID OF TEMPLATE CARDS. Each card shows:
+  a 16:9 thumbnail/preview image of the animated graphic, the template name,
+  a small category tag, the aspect-ratio badge, and a tiny "alpha" badge when it
+  supports transparency. On hover, show a subtle play-preview affordance and a
+  "Use template" button. One card should appear selected with the accent ring.
+- Group the grid under section headers like "Broadcast" and "Digital Signage",
+  with a "Recently used" row at the top.
+
+================================================================================
+SCREEN 2 — EDITOR (the core screen — make this the richest)
+================================================================================
+A three-panel + bottom-timeline editor. This is where the user customizes a
+template. NO nodes, NO keyframe curves — only simple controls.
+
+TOP BAR:
+- Left: back arrow, editable project name ("Untitled Lower Third"), and a small
+  auto-save "Saved" indicator.
+- Center: the project's aspect ratio / resolution shown as a pill (e.g.
+  "1920 × 1080 · 16:9"), with a transparency toggle pill ("Transparent BG: On").
+- Right: a "Preview" toggle and a big primary "Export" button (accent color).
+
+CENTER — LIVE VIEWPORT (largest area):
+- A large dark canvas showing the rendered motion-graphic frame, centered with a
+  subtle checkerboard behind it when transparency is on (to signal alpha).
+- A floating PLAYBACK CONTROL BAR pinned at the bottom of the viewport:
+  play/pause button (accent), a scrubber/seek bar with a draggable playhead,
+  current time / total duration readout (e.g. "0:02 / 0:05"), a loop toggle,
+  and a frame-rate/quality indicator chip ("30 fps").
+
+RIGHT — DYNAMIC PARAMETER INSPECTOR PANEL (scrollable):
+- Titled "Customize". Controls are grouped into collapsible sections with
+  headers (e.g. "Text", "Colors", "Logo & Media", "Style", "Timing").
+- Show a realistic variety of auto-generated form controls, because this panel
+  is generated dynamically from a template:
+  * Single-line TEXT INPUT (label "Headline") and a multi-line TEXT AREA
+    (label "Subtitle / Body").
+  * COLOR PICKERS with a swatch + hex value (labels "Primary Color",
+    "Background", "Text Color").
+  * SLIDERS with a numeric value on the right (labels "Animation Speed",
+    "Corner Radius", "Logo Scale") — slider fill in the accent color.
+  * TOGGLE SWITCHES (labels "Drop Shadow", "Loop Forever", "Show Logo").
+  * A DROPDOWN / SELECT (label "Style" with options like "Neon", "Flat",
+    "Glass", "Bold").
+  * An ASSET PICKER tile (label "Logo") shown as a dashed drop-zone reading
+    "Drag & drop or click to upload (.png, .mp4, .ttf)" with a small thumbnail
+    once filled.
+- Controls should feel instant/live — imply the preview updates as you edit.
+
+BOTTOM — SLOT-BASED TIMELINE (NOT a keyframe timeline):
+- A single horizontal track divided into a few labeled BLOCKS / "slots" laid end
+  to end, e.g. "Intro" → "Hold" → "Outro". Each block is a rounded colored
+  segment whose width represents its duration. The user can drag the edges of a
+  block to make it longer or shorter (show subtle drag handles on block edges).
+- Above the track, a time ruler in seconds (0s, 1s, 2s … 5s) with the playhead
+  aligned to the viewport scrubber. Show the total duration on the right.
+- Keep it dead simple: blocks only, no layers, no curves, no dope sheet.
+
+LEFT (in the editor) — a slim contextual panel:
+- A small live thumbnail of the current template, its name and category, and a
+  "Change template" link. Optionally a short list of preset variations as small
+  thumbnails the user can click to restyle instantly.
+
+================================================================================
+SCREEN 3 — EXPORT / PUBLISH MODAL
+================================================================================
+A focused modal dialog launched by the "Export" button. Make export decisions
+obvious for both broadcast and signage users.
+
+- Title "Export". Tabs or segmented control for DESTINATION:
+  "Save to File", "Send to OBS", "Digital Signage Screen".
+- FORMAT options as selectable cards with icons:
+  * "MP4 (H.264) — best for sharing"
+  * "Transparent WebM / ProRes 4444 — for broadcast keying" (highlight an
+    "alpha" badge)
+  * "Looping video — for signage"
+  * "PNG sequence"
+- RESOLUTION / PRESET dropdown with friendly presets: "1080p (1920×1080)",
+  "4K (3840×2160)", "Vertical 1080×1920", "Ultrawide signage 3840×1080",
+  "Portrait signage 1080×1920".
+- Toggles: "Transparent background", "Loop seamlessly".
+- A small summary line ("~5s · 30 fps · transparent") and a big primary
+  "Export" button plus "Cancel". Optionally a progress bar state showing
+  "Rendering… 47%".
+
+================================================================================
+SCREEN 4 — SUITE MANAGER / SETTINGS (the system hub)
+================================================================================
+A settings/health screen that demystifies the underlying engine for casual users
+(it manages the background render engine components).
+
+- A list of COMPONENT STATUS CARDS, each with a name, a status pill
+  (green "Healthy" / amber "Update available" / red "Not found"), a version
+  number, an install path, and an action button ("Update" / "Repair" / "Install"):
+  * "Render Engine" (Blender headless)
+  * "Mo.Blend Python Engine"
+  * "API Broker / Server"
+  * "Template Library (lib.moblend.dev)"
+- A "Run Health Check" primary button at the top with a last-checked timestamp,
+  and a clear all-systems banner ("All systems ready ✓") when healthy.
+- Each card has a short plain-English tooltip/description explaining what it does
+  (demystify the architecture). Keep it reassuring and simple.
+
+================================================================================
+GENERAL UI NOTES FOR ALL SCREENS
+================================================================================
+- Desktop layout, wide aspect, multi-panel — design for a 1440px+ window.
+- Consistent dark theme, accent color, rounded cards, line icons throughout.
+- Empty/hover/selected/disabled states where relevant.
+- Keep language friendly and jargon-free for non-technical users.
+- Prioritize the Editor screen — it is the heart of the product.

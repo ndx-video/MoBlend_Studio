@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mo.Blend Studio - Suite Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#343439",
+                        "surface-container-low": "#1a1b1f",
+                        "on-surface-variant": "#c8c4d7",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#f8f7ff",
+                        "secondary": "#aec6ff",
+                        "tertiary-container": "#717178",
+                        "on-secondary": "#002e6a",
+                        "surface-tint": "#c6bfff",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-surface": "#e3e2e7",
+                        "secondary-fixed-dim": "#aec6ff",
+                        "outline": "#928ea0",
+                        "on-primary-fixed": "#160066",
+                        "inverse-surface": "#e3e2e7",
+                        "tertiary": "#c6c6ce",
+                        "on-primary": "#2900a0",
+                        "tertiary-fixed-dim": "#c6c6ce",
+                        "surface-container": "#1e1f24",
+                        "surface-container-highest": "#343439",
+                        "tertiary-fixed": "#e3e1ea",
+                        "surface-container-high": "#292a2e",
+                        "primary-container": "#6c5ce7",
+                        "on-tertiary-fixed-variant": "#46464d",
+                        "surface": "#121317",
+                        "primary-fixed": "#e4dfff",
+                        "surface-bright": "#38393d",
+                        "primary": "#c6bfff",
+                        "secondary-container": "#0061d1",
+                        "on-tertiary": "#2f3036",
+                        "primary-fixed-dim": "#c6bfff",
+                        "on-tertiary-fixed": "#1a1b21",
+                        "on-background": "#e3e2e7",
+                        "secondary-fixed": "#d8e2ff",
+                        "on-secondary-container": "#dbe4ff",
+                        "on-primary-fixed-variant": "#4029ba",
+                        "background": "#121317",
+                        "outline-variant": "#474554",
+                        "surface-dim": "#121317",
+                        "inverse-primary": "#5847d2",
+                        "on-primary-container": "#faf6ff",
+                        "surface-container-lowest": "#0d0e12",
+                        "inverse-on-surface": "#2f3034",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#001a42",
+                        "on-secondary-fixed-variant": "#004395",
+                        "success": "#4CAF50",
+                        "warning": "#FF9800"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "24px",
+                        "unit": "4px",
+                        "container-margin": "12px",
+                        "sm": "8px",
+                        "xl": "48px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "panel-gutter": "1px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-label": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "title-sm": ["16px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                        "label-caps": ["10px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["14px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "mono-label": ["11px", {"lineHeight": "1.4", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #16171B; color: #e3e2e7; }
+        .gradient-text { background: linear-gradient(90deg, #c6bfff, #6c5ce7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-btn { background: linear-gradient(90deg, #6c5ce7, #5847d2); color: white; border: none; }
+        .gradient-btn:hover { background: linear-gradient(90deg, #5847d2, #4029ba); }
+        .glass-panel { background: rgba(30, 31, 37, 0.7); backdrop-filter: blur(10px); border: 1px solid #2D2E35; }
+        .status-pill-healthy { background-color: rgba(76, 175, 80, 0.1); color: #4CAF50; border: 1px solid rgba(76, 175, 80, 0.2); }
+        .status-pill-update { background-color: rgba(255, 152, 0, 0.1); color: #FF9800; border: 1px solid rgba(255, 152, 0, 0.2); }
+        .status-pill-error { background-color: rgba(255, 180, 171, 0.1); color: #ffb4ab; border: 1px solid rgba(255, 180, 171, 0.2); }
+        
+        /* Tooltip styling */
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; }
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: #2D2E35;
+            color: #e3e2e7;
+            text-align: center;
+            border-radius: 4px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            border: 1px solid #474554;
+            font-size: 11px;
+            line-height: 1.4;
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2D2E35 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-hidden antialiased">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full z-40 bg-surface-container dark:bg-surface-container h-screen w-16 md:w-20 flex-col border-r border-outline-variant flex pt-lg pb-lg items-center justify-between">
+<div class="flex flex-col items-center w-full gap-xl">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant mb-md cursor-pointer hover:bg-surface-variant transition-colors group">
+<span class="font-headline-md text-headline-md font-bold text-primary group-hover:scale-105 transition-transform">M</span>
+</div>
+<div class="flex flex-col w-full gap-sm px-2">
+<div class="flex flex-col items-center justify-center py-sm rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors active:scale-95 group w-full tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">home</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary mt-1 hidden md:block">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center py-sm rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors active:scale-95 group w-full tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">folder_special</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary mt-1 hidden md:block text-center">My Projects</span>
+</div>
+<div class="flex flex-col items-center justify-center py-sm rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors active:scale-95 group w-full tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">layers</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant group-hover:text-primary mt-1 hidden md:block">Assets</span>
+</div>
+<div class="flex flex-col items-center justify-center py-sm rounded-lg cursor-pointer text-primary border-l-2 border-primary bg-surface-variant active:scale-95 group w-full">
+<span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings: 'FILL' 1;">settings_input_component</span>
+<span class="font-label-caps text-label-caps text-primary mt-1 hidden md:block text-center">Suite Manager</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center w-full gap-md px-2">
+<div class="flex flex-col items-center justify-center py-sm rounded-lg cursor-pointer hover:bg-surface-container-high transition-colors active:scale-95 group w-full">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">help</span>
+</div>
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-outline-variant mt-sm" data-alt="A futuristic UI profile avatar portrait of a modern digital artist in a dark studio. High tech lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmqP-JqdFxWVm_yXuQiEpBRxJeLfJGt4hpwaCk9M6WvnND7zCqDULk-RH1DMe3_qS3a3LaGAyZ4Ksxj3RS7rpO7reYlkadKSj3y-6q4dCWGi-8x6kjRDnqtWOoNCOPibbFCa4NirEYuikFOn5l2R0coh7h8YvK7KWsFRWkHjsVBZ2d6kwQ0nXzI92ZB8qIXSvaYTjf7y8V6HPWNb0NbaT4hj6KIj2Ev6fW5XUEdtfj5z58ilj7Q2GwIVerxw3XK9TKWuM_NB2wThOt"/>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-16 md:ml-20 flex flex-col h-screen overflow-y-auto">
+<!-- TopNavBar -->
+<header class="sticky top-0 right-0 left-0 h-12 flex justify-between items-center px-md z-50 bg-surface-container dark:bg-surface-container border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-black text-primary">Mo.Blend Studio</span>
+<div class="h-4 w-px bg-outline-variant mx-sm"></div>
+<div class="flex gap-md h-full items-center">
+<span class="font-title-sm text-title-sm text-on-surface-variant cursor-pointer hover:text-primary transition-opacity">Project: Neon_Pulse_01</span>
+<span class="font-title-sm text-title-sm text-on-surface-variant cursor-pointer hover:text-primary transition-opacity">Status: Rendering...</span>
+</div>
+</div>
+<div class="flex items-center gap-md flex items-center gap-md">
+<div class="flex gap-sm">
+<button class="w-8 h-8 flex items-center justify-center rounded text-on-surface-variant hover:text-primary hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">history</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-primary bg-surface-variant transition-colors border-b-2 border-primary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">settings</span>
+</button>
+</div>
+<button class="px-3 py-1 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant transition-colors">Save</button>
+<button class="px-3 py-1 font-title-sm text-title-sm text-white gradient-btn rounded shadow-lg shadow-primary/20">Export</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-lg md:p-xl flex-1 flex flex-col gap-lg max-w-7xl mx-auto w-full">
+<!-- Page Header -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-md">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-xs">Suite Manager</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Configure core components and verify system health.</p>
+</div>
+<button class="px-4 py-2 font-title-sm text-title-sm text-white gradient-btn rounded-lg shadow-lg shadow-primary/20 flex items-center gap-sm transition-transform active:scale-95">
+<span class="material-symbols-outlined text-sm">health_and_safety</span>
+                    Run Health Check
+                </button>
+</div>
+<!-- Banner -->
+<div class="glass-panel rounded-lg p-sm flex items-center gap-sm border-l-4" style="border-left-color: #4CAF50;">
+<div class="w-8 h-8 rounded-full bg-success/10 flex items-center justify-center text-success ml-xs">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+<span class="font-title-sm text-title-sm text-on-surface font-medium">All systems ready ✓</span>
+</div>
+<!-- Bento Grid of Services -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-md mt-md">
+<!-- Component Card: Render Engine -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-md relative overflow-hidden group hover:border-outline transition-colors">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10 group-hover:bg-primary/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">view_in_ar</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-title-sm text-title-sm text-on-surface font-semibold">Render Engine</h3>
+<div class="tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-help hover:text-primary">info</span>
+<span class="tooltip-text font-body-sm text-body-sm">The core graphics processor responsible for compiling raw assets into final pixel output. Handles raytracing and rasterization.</span>
+</div>
+</div>
+<p class="font-mono-label text-mono-label text-on-surface-variant mt-1">v4.2.0-stable</p>
+</div>
+</div>
+<div class="status-pill-healthy px-2 py-1 rounded-full flex items-center gap-1 font-label-caps text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                            Healthy
+                        </div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant/50">
+<p class="font-mono-label text-mono-label text-tertiary-container mb-sm truncate" title="C:\Program Files\MoBlend\Core\RenderEngine.exe">Path: C:\Program Files\MoBlend\Core\RenderEngine.exe</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-1.5 px-3 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled="">Up to date</button>
+<button class="px-3 py-1.5 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant hover:text-primary transition-colors flex items-center justify-center" title="Repair">
+<span class="material-symbols-outlined text-sm">build</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Component Card: Python Engine -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-md relative overflow-hidden group hover:border-outline transition-colors">
+<div class="absolute top-0 right-0 w-32 h-32 bg-warning/5 rounded-bl-full -z-10 group-hover:bg-warning/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">terminal</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-title-sm text-title-sm text-on-surface font-semibold">Python Engine</h3>
+<div class="tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-help hover:text-primary">info</span>
+<span class="tooltip-text font-body-sm text-body-sm">Executes user scripts, automation tasks, and custom pipeline tools written in Python. Crucial for procedural workflows.</span>
+</div>
+</div>
+<p class="font-mono-label text-mono-label text-on-surface-variant mt-1">v3.10.4</p>
+</div>
+</div>
+<div class="status-pill-update px-2 py-1 rounded-full flex items-center gap-1 font-label-caps text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-warning animate-pulse"></span>
+                            Update Available
+                        </div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant/50">
+<p class="font-mono-label text-mono-label text-tertiary-container mb-sm truncate" title="C:\Program Files\MoBlend\Env\Python\python.exe">Path: C:\Program Files\MoBlend\Env\Python\python.exe</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-1.5 px-3 font-title-sm text-title-sm text-surface-container bg-primary hover:bg-primary-fixed transition-colors rounded font-medium">Update to v3.11.0</button>
+<button class="px-3 py-1.5 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant hover:text-primary transition-colors flex items-center justify-center" title="Repair">
+<span class="material-symbols-outlined text-sm">build</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Component Card: API Broker -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-md relative overflow-hidden group hover:border-outline transition-colors">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -z-10 group-hover:bg-primary/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">router</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-title-sm text-title-sm text-on-surface font-semibold">API Broker</h3>
+<div class="tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-help hover:text-primary">info</span>
+<span class="tooltip-text font-body-sm text-body-sm">Manages communication between the local studio environment and external cloud rendering or asset library services.</span>
+</div>
+</div>
+<p class="font-mono-label text-mono-label text-on-surface-variant mt-1">v2.1.8</p>
+</div>
+</div>
+<div class="status-pill-healthy px-2 py-1 rounded-full flex items-center gap-1 font-label-caps text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-success"></span>
+                            Healthy
+                        </div>
+</div>
+<div class="mt-auto pt-md border-t border-outline-variant/50">
+<p class="font-mono-label text-mono-label text-tertiary-container mb-sm truncate" title="C:\Program Files\MoBlend\Services\ApiBroker.dll">Path: C:\Program Files\MoBlend\Services\ApiBroker.dll</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-1.5 px-3 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled="">Up to date</button>
+<button class="px-3 py-1.5 font-title-sm text-title-sm text-on-surface border border-outline-variant rounded hover:bg-surface-variant hover:text-primary transition-colors flex items-center justify-center" title="Repair">
+<span class="material-symbols-outlined text-sm">build</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Component Card: Template Registry -->
+<div class="glass-panel rounded-xl p-md flex flex-col gap-md relative overflow-hidden group hover:border-error-container transition-colors border-error-container/30">
+<div class="absolute top-0 right-0 w-32 h-32 bg-error/5 rounded-bl-full -z-10 group-hover:bg-error/10 transition-colors"></div>
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded bg-surface-container-high border border-error-container/50 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">library_books</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-title-sm text-title-sm text-on-surface font-semibold">Template Registry</h3>
+<div class="tooltip-container">
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-help hover:text-error">info</span>
+<span class="tooltip-text font-body-sm text-body-sm">Local database indexing installed project templates, node groups, and preset libraries for quick access.</span>
+</div>
+</div>
+<p class="font-mono-label text-mono-label text-on-surface-variant mt-1">Unknown / Missing</p>
+</div>
+</div>
+<div class="status-pill-error px-2 py-1 rounded-full flex items-center gap-1 font-label-caps text-label-caps">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                            Not Found
+                        </div>
+</div>
+<div class="mt-auto pt-md border-t border-error-container/30">
+<p class="font-mono-label text-mono-label text-error mb-sm truncate" title="Path invalid or inaccessible">Path: [Path invalid or inaccessible]</p>
+<div class="flex gap-sm">
+<button class="flex-1 py-1.5 px-3 font-title-sm text-title-sm text-error border border-error-container rounded hover:bg-error-container/20 transition-colors">Reinstall Registry</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
