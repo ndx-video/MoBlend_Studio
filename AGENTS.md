@@ -36,6 +36,7 @@ clients/sentinel/# Sentinel UI (placement TBD)
 specs/           # PRDs and API contract
 scripts/         # Dev orchestration
 ROADMAP.md       # Milestone order (M0–M6)
+.progress/       # Append-only progress log (mandatory — see README)
 ```
 
 ## Architecture rules (do not violate)
@@ -53,6 +54,8 @@ ROADMAP.md       # Milestone order (M0–M6)
 | Task | Read first |
 |------|------------|
 | What to build next | [ROADMAP.md](ROADMAP.md) |
+| What was already done | [.progress/](.progress/) (latest index per milestone) |
+| Progress log rules | [.progress/README.md](.progress/README.md) |
 | API contracts | [specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md) |
 | Viewport protocol | [PRD 3 §3.2](specs/PRD%203%20-%20MCP%20&%20API%20Server%20(Expanded).md) |
 | Desktop shell | [PRD 4](specs/PRD%204%20-%20Wails%20Desktop%20UI.md) |
@@ -69,6 +72,20 @@ ROADMAP.md       # Milestone order (M0–M6)
 ## Milestone order
 
 Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 scaffold → M1 engine → M2 broker (REST + WebSocket) → M3 Wails MVP → M4 registry → M5 OBS → M6 Sentinel.
+
+## Progress log (mandatory)
+
+**Read and follow [.progress/README.md](.progress/README.md) on every task that changes the project.**
+
+Strict rules:
+
+1. **Append only.** Create a new file under `.progress/` when work is done. **Never** edit, rename, or delete an existing progress file.
+2. **Filename:** `{milestone}.{index}.{descriptor}.md` — e.g. `M2.001.ws-handshake-stub.md`. Three-digit index per milestone; use the next available number.
+3. **Automatic.** Agents must write a progress entry at the end of any non-trivial session (implementation, spec/architecture changes, decisions, regressions).
+4. **Regressions and reversals.** Document as a **new** entry (e.g. `M9.013.deleted-m9-milestone.md`). Do not revise or remove earlier entries for the same topic.
+5. **Immutability.** The log is an audit trail of entailed decision-making. Gaps in numbering are fine; renumbering is forbidden.
+
+Use the entry template in `.progress/README.md`. Link related commits, PRDs, and prior progress files.
 
 ## gRPC (future only)
 

@@ -24,6 +24,7 @@ MoBlend_Studio/
 ├── specs/           # Product requirements & API contracts
 ├── scripts/         # Dev orchestration
 ├── AGENTS.md        # AI agent guide (architecture rules, conventions)
+├── .progress/       # Append-only progress log (see README inside)
 └── ROADMAP.md       # Milestone plan (M0–M6)
 ```
 
@@ -47,7 +48,8 @@ Wails, OBS, and Sentinel clients connect directly from the browser/webview. Wire
 ## Documentation
 
 - **[ROADMAP.md](ROADMAP.md)** — Build order and exit criteria (start here for implementation)
-- **[AGENTS.md](AGENTS.md)** — Guide for AI coding agents
+- **[AGENTS.md](AGENTS.md)** — Guide for AI coding agents (includes mandatory progress rules)
+- **[.progress/README.md](.progress/README.md)** — Append-only progress log specification
 - **[specs/Mo.Blend System PRDs.md](specs/Mo.Blend%20System%20PRDs.md)** — Master overview + repository map
 - **[specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md)** — REST, WebSocket, and MCP contracts
 
