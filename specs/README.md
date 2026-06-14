@@ -121,6 +121,7 @@ Project nomenclature. Codenames (**Platform**, **Broker**, **Studio**, **Sentine
 | **Platform** | 2 | The Mo.Blend Python engine running inside Blender's `bpy` memory space — the "brain" that parses manifests, mutates Geometry Node sockets, drives the slot timeline, and ingests assets. |
 | **Broker** | 3 | The FastAPI/uvicorn server on `127.0.0.1:8000` exposing the REST control plane, the binary WebSocket viewport, and the MCP agent plane. Isolates single-threaded `bpy` from the network. |
 | **Studio** | 4 | Mo.Blend Studio — the Wails v2 desktop app (Go backend + React/TS frontend), the casual-user, no-nodes editor. |
+| **OBS Panel** | 5 | The OBS Extension Panel — a lightweight HTML/JS dock running in OBS's built-in CEF for render-and-inject broadcast graphics. (No codename; descriptive name only.) |
 | **Sentinel** | 6 | The Sentinel Kit UI — an MCP chat-and-canvas workspace where an LLM acts as a virtual technical artist. |
 | **Suite Manager** | 4 | The hub panel inside Studio that tracks/install/health-checks the suite components (Blender, Platform, Broker, registry connection). |
 | **Template Inspector** | 8 | External Blender addon (`MoBlend_TemplateInspector`) for authoring/validating templates and prepping them for the registry. |
