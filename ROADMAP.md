@@ -6,7 +6,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Platforms:** Windows (primary dev target) · Linux · macOS Apple Silicon (parity as needed)
 
-**External repos:** `moblend-registry` (PRD 7) · `MoBlend_TemplateInspector` (PRD 8)
+**External repos:** `moblend-registry` (PRD 7 — powers official template library) · `MoBlend_TemplateInspector` (PRD 8)
+
+**Public sites:** `moblend.dev` (news / info / docs) · `lib.moblend.dev` (official template library)
 
 ---
 
@@ -69,18 +71,18 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 - Drag-drop asset → sandbox copy → API ingest works
 - Export job can be triggered (202 + poll acceptable for MVP)
 
-**Out of scope:** Registry gallery, OBS, Sentinel, MCP in desktop
+**Out of scope:** Official template library gallery (M4), OBS, Sentinel, MCP in desktop
 
 ---
 
 ## M4 — Registry Integration
 
-**Goal:** Template gallery from `moblend-registry` `index.json`; one-click install to `~/.moblend/templates/`.
+**Goal:** Template gallery from the official library at `lib.moblend.dev` (backed by `moblend-registry` `index.json`); one-click install to `~/.moblend/templates/`.
 
 **PRD refs:** [PRD 7](specs/PRD%207%20-%20Template%20Repository.md) (client side)
 
 **Done when:**
-- Suite Manager fetches `index.json` from configured registry URL on launch
+- Suite Manager fetches `index.json` from the configured library/registry URL (e.g. `lib.moblend.dev` or backing raw source) on launch
 - Gallery shows previews; "Install" streams `.mo.blend` via Go backend to local cache
 - Loaded installed template works through M3 flow
 
