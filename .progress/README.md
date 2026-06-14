@@ -20,7 +20,7 @@ This folder is **tracked in git**. Do not add `.progress/` to `.gitignore`.
 
 **Full example:** `M000.002.websocket-viewport-spec.md`
 
-> Only the **filename** milestone token is zero-padded. Prose references to a roadmap milestone (e.g. "M0 — Specs & Scaffold", the `**Milestone:**` line in an entry) keep the ROADMAP's short form.
+> Only the **filename** milestone token is zero-padded. Prose references to a roadmap milestone (e.g. "M0 — Specs & Scaffold", the `milestone` frontmatter field) keep the ROADMAP's short form.
 
 ### Index rules
 
@@ -66,12 +66,14 @@ Skip progress docs only for trivial typo fixes with zero design impact.
 Copy into each new file:
 
 ```markdown
-# {milestone} — {short title}
+---
+file: {filename}
+date: YYYY-MM-DD
+milestone: M{n} — {name from ROADMAP}
+related_commits: {hash or uncommitted}
+---
 
-- **File:** `{filename}`
-- **Date:** YYYY-MM-DD
-- **Milestone:** M{n} — {name from ROADMAP}
-- **Related commits:** {hash or "uncommitted"}
+# M{n} — {short title}
 
 ## Summary
 
