@@ -1,11 +1,15 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-  Mo.Blend M0 dev launcher (scripts/dev.ps1).
+  Mo.Blend M1 dev launcher (scripts/dev.ps1).
 
 .DESCRIPTION
-  Starts the engine stub via headless Blender (demonstrates --python entrypoint)
-  and launches the Wails desktop dev server in a new window (opens the empty shell UI).
+  Starts the engine (M1 core) via headless Blender, runs the M1 round-trip
+  verification (synthetic template + load/set/save + shadow rotation + persistence
+  proof), then launches the Wails desktop dev server in a new window.
+
+  The verification step proves the four M1 "done when" gates on every dev run
+  (no manual Blender UI required).
 
   Run from repo root:
     pwsh -ExecutionPolicy Bypass -File scripts/dev.ps1
@@ -20,7 +24,7 @@ param()
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
 
-Write-Host "=== Mo.Blend M0 Dev ===" -ForegroundColor Cyan
+Write-Host "=== Mo.Blend M1 Dev ===" -ForegroundColor Cyan
 Write-Host "Repo: $repoRoot" -ForegroundColor DarkGray
 
 # --- Locate Blender (prefer the latest winget-managed install) ---
@@ -65,12 +69,22 @@ Write-Host "Using Blender: $blenderExe" -ForegroundColor Green
 
 # --- Engine stub ---
 $stub = Join-Path $repoRoot "engine\bootstrap.py"
-Write-Host "`n[1/2] Running engine stub..." -ForegroundColor Yellow
+Write-Host "`n[1/3] Running engine stub..." -ForegroundColor Yellow
 Write-Host "    $blenderExe --background --factory-startup --python `"$stub`"" -ForegroundColor DarkGray
 
 & $blenderExe --background --factory-startup --python $stub 2>&1
 
 Write-Host "`nEngine stub finished." -ForegroundColor Green
+
+# --- M1 Engine Core verification (added for M1; proves the four ROADMAP gates) ---
+Write-Host "`n[2/3] M1 Engine Core round-trip (synthetic template + load/set/save + shadows)..." -ForegroundColor Yellow
+$m1Verify = Join-Path $repoRoot "engine\tests\m1_roundtrip.py"
+& $blenderExe --background --factory-startup --python $m1Verify 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "M1 verification failed (exit $LASTEXITCODE). See output above."
+    exit 1
+}
+Write-Host "M1 verification PASS" -ForegroundColor Green
 
 # --- Wails desktop (empty window) ---
 $wailsCmd = "wails"
@@ -79,7 +93,7 @@ $goBin = Join-Path $env:USERPROFILE "go\bin\wails.exe"
 if (Test-Path $goBin) { $wailsCmd = $goBin }
 
 $desktopDir = Join-Path $repoRoot "desktop"
-Write-Host "`n[2/2] Launching Wails dev (empty shell UI) in a new window..." -ForegroundColor Yellow
+Write-Host "`n[3/3] Launching Wails dev (empty shell UI) in a new window..." -ForegroundColor Yellow
 Write-Host "    cd $desktopDir ; $wailsCmd dev" -ForegroundColor DarkGray
 Write-Host "    (The Wails desktop window should appear shortly — this is the M0 empty shell.)" -ForegroundColor DarkGray
 
@@ -97,5 +111,5 @@ try {
     Write-Host "    wails dev" -ForegroundColor Cyan
 }
 
-Write-Host "`nM0 scaffold ready. See ROADMAP.md for next (M1 — Engine Core)." -ForegroundColor Cyan
-Write-Host "Tip: After changes to engine/ you can re-run this script to re-verify the stub." -ForegroundColor DarkGray
+Write-Host "`nM1 Engine Core ready (see ROADMAP.md for M2 — API Broker)." -ForegroundColor Cyan
+Write-Host "Tip: Re-run this script after engine/ changes — it now runs the full M1 round-trip verification before launching Wails." -ForegroundColor DarkGray
