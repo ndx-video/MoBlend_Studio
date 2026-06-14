@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://moblend.dev/schemas/manifest-v1.schema.json",
+  "title": "Mo.Blend Template Manifest",
+  "description": "Canonical schema for the JSON manifest embedded in a .mo.blend template (bpy.context.scene['moblend_manifest']) and extracted alongside the binary in the registry as <name>.manifest.json. This is the single source of truth for the manifest contract shared by the engine (PRD 2), the broker (PRD 3), all UI clients (PRD 4/5/6), and the registry CI (PRD 7).",
+  "type": "object",
+  "required": ["version", "template_id", "parameters"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "description": "Manifest schema version. v1 of the schema uses \"1.0\". This is distinct from the template's own content version in metadata.template_version.",
+      "type": "string",
+      "const": "1.0"
+    },
+    "template_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable, URL-safe identifier (kebab-case), e.g. \"lower-third-ninja\"."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "author": { "type": "string" },
+        "template_version": {
+          "type": "string",
+          "description": "Template content version (SemVer). Bump major when a parameter id/type is removed or changed incompatibly (see PRD 7 §6)."
+        },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "complexity_score": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/parameter" }
+    },
+    "slot_presets": {
+      "type": "array",
+      "description": "Named animation behaviors a slot can run, referenced by PATCH /api/v1/slots and engine.set_slot(preset_id=...).",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "slots": {
+      "type": "array",
+      "description": "Default slot layout (time blocks) the template ships with. Times are in seconds.",
+      "items": {
+        "type": "object",
+        "required": ["index", "start_time", "end_time"],
+        "additionalProperties": false,
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "label": { "type": "string" },
+          "start_time": { "type": "number", "minimum": 0 },
+          "end_time": { "type": "number", "minimum": 0 },
+          "preset_id": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "parameterType": {
+      "description": "Canonical Mo.Blend parameter type registry. Clients map each type to a UI control (see PRD 4 §6.2) and the engine coerces it to the target Blender socket value (see PRD 2 §3).",
+      "type": "string",
+      "enum": [
+        "string",
+        "text",
+        "int",
+        "float",
+        "bool",
+        "color_rgba",
+        "enum",
+        "image",
+        "video",
+        "font"
+      ]
+    },
+    "parameter": {
+      "type": "object",
+      "required": ["id", "type", "node_target", "socket_identifier"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable parameter id referenced by the API (PATCH /api/v1/parameters) and MCP tools."
+        },
+        "type": { "$ref": "#/$defs/parameterType" },
+        "label": {
+          "type": "string",
+          "description": "Human-readable label for UI rendering."
+        },
+        "ui_group": {
+          "type": "string",
+          "description": "Optional grouping for the auto-generated inspector panel (e.g. \"Typography\", \"Style\")."
+        },
+        "node_target": {
+          "type": "string",
+          "description": "Name of the target node group or material that owns the input socket, e.g. \"NodeGroup_TextGen\"."
+        },
+        "socket_identifier": {
+          "type": "string",
+          "description": "Stable Blender node-tree interface socket identifier (e.g. \"Socket_2\"), NOT a positional index. Identifiers survive socket reordering; positional indices do not (see PRD 2 §3)."
+        },
+        "default": {
+          "description": "Default value, encoded per type (hex string for color_rgba, number for float/int, etc.)."
+        },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "options": {
+          "type": "array",
+          "description": "Allowed values for type=enum.",
+          "items": { "type": "string" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "enum" } } },
+          "then": { "required": ["options"] }
+        }
+      ]
+    }
+  }
+}
