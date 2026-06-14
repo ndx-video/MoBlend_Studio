@@ -4,7 +4,10 @@ version = "0.0.0"
 description = "Mo.Blend Python engine (bpy platform + broker entrypoint)"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []  # bpy is supplied by the Blender runtime; keep core deps minimal
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+]  # bpy supplied by Blender; fastapi/uvicorn required for the M2+ broker (installed into Blender's python at dev time)
 
 [build-system]
 requires = ["setuptools>=61"]

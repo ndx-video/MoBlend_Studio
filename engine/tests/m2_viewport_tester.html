@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mo.Blend M2 Viewport Tester</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 20px; background: #111; color: #ddd; }
+  h1 { font-size: 18px; }
+  canvas { border: 1px solid #444; background: #000; image-rendering: pixelated; }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .panel { background: #1a1a1a; padding: 12px; border-radius: 6px; }
+  button, input, select { font-size: 13px; padding: 4px 8px; }
+  .log { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre; background: #000; padding: 8px; height: 140px; overflow: auto; border: 1px solid #333; }
+  .stat { font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Mo.Blend M2 — Binary WS Viewport Tester <small>(zero dependencies, open directly)</small></h1>
+
+<div class="row">
+  <div>
+    <canvas id="c" width="640" height="360"></canvas>
+    <div class="stat" id="stats">Disconnected. FPS: -- | Last frame: -- | Dropped: --</div>
+  </div>
+
+  <div class="panel" style="min-width: 320px">
+    <div>
+      <label>Broker:</label>
+      <input id="host" value="127.0.0.1" size="12">
+      <input id="port" value="8000" size="5">
+      <button id="connect">Connect WS</button>
+      <button id="disconnect">Disconnect</button>
+    </div>
+
+    <hr>
+
+    <div>
+      <button id="loadM1">POST /load (M1 test template)</button>
+      <button id="getManifest">GET /manifest</button>
+      <button id="health">GET /health</button>
+    </div>
+
+    <div style="margin-top:8px">
+      <label>Param patch (intensity):</label>
+      <input id="val" type="range" min="0" max="5" step="0.1" value="1.5">
+      <span id="valLabel">1.5</span>
+      <button id="patch">PATCH</button>
+    </div>
+
+    <div style="margin-top:8px">
+      <button id="reqFrame">Request frame (current)</button>
+      <button id="reqBig">Request 960×540</button>
+      <select id="fmt">
+        <option value="0">JPEG</option>
+        <option value="1">WEBP (alpha)</option>
+      </select>
+      <label><input type="checkbox" id="drop" checked> drop if stale</label>
+    </div>
+
+    <div style="margin-top:8px">
+      <button id="scrub">Scrub burst (40 frames, drop-stale)</button>
+      <button id="burst">Normal burst (30 frames)</button>
+    </div>
+
+    <div class="log" id="log"></div>
+    <div style="font-size:11px; opacity:0.7; margin-top:4px">
+      Wire: 13-byte LE REQUEST (0x01) / FRAME (0x02) / ERROR (0xFF). See PRD 3 §3.2.<br>
+      The M1 synthetic template has an "intensity" param that visibly scales a cube.
+    </div>
+  </div>
+</div>
+
+<script>
+const logEl = document.getElementById('log');
+const c = document.getElementById('c');
+const ctx = c.getContext('2d', { alpha: true });
+let ws = null;
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let fps = 0;
+let dropped = 0;
+let lastFrameNum = -1;
+
+function log(msg) {
+  const t = new Date().toLocaleTimeString();
+  logEl.textContent += `[${t}] ${msg}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function updateStats() {
+  document.getElementById('stats').textContent =
+    `${ws ? 'Connected' : 'Disconnected'}. FPS: ${fps.toFixed(1)} | Last frame: ${lastFrameNum} | Dropped (client): ${dropped}`;
+}
+
+function setCanvasSize(w, h) {
+  c.width = w || 640;
+  c.height = h || 360;
+}
+
+async function rest(method, path, body) {
+  const host = document.getElementById('host').value.trim();
+  const port = document.getElementById('port').value.trim();
+  const url = `http://${host}:${port}${path}`;
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const txt = await r.text().catch(()=> '');
+    throw new Error(`${r.status} ${r.statusText} ${txt}`);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+async function doLoad() {
+  const m1 = (await (await fetch('file://' + location.pathname.replace(/[^/\\]+$/,'') + '../../../')).catch(()=>null)) || '';
+  // We don't know the exact temp path from the browser easily; use the conventional one.
+  const path = (navigator.platform.indexOf('Win') >= 0)
+    ? 'C:\\\\Users\\\\' + (await (async()=>{try{return (await (await fetch('/')).text()).match(/USERNAME=([^&]+)/)[1]}catch(e){return 'Terence'}})()) + '\\\\AppData\\\\Local\\\\Temp\\\\m1_minimal_test.mo.blend'
+    : '/tmp/m1_minimal_test.mo.blend';
+  // Better: just tell the user / use the known default that dev.ps1 + m1 test leave in %TEMP%
+  try {
+    const res = await rest('POST', '/api/v1/project/load', { template_path: 'C:\\\\TEMP\\\\m1_minimal_test.mo.blend' });
+    log('load: ' + JSON.stringify(res));
+  } catch (e) {
+    // Try the env TEMP typical Windows path used by the roundtrip
+    try {
+      const res2 = await rest('POST', '/api/v1/project/load', { template_path: 'C:\\\\Users\\\\Terence\\\\AppData\\\\Local\\\\Temp\\\\m1_minimal_test.mo.blend' });
+      log('load (fallback): ' + JSON.stringify(res2));
+    } catch (e2) {
+      log('load failed (edit the path in the HTML or start the broker with --load): ' + e2);
+    }
+  }
+}
+
+async function doPatch() {
+  const v = parseFloat(document.getElementById('val').value);
+  try {
+    const r = await rest('PATCH', '/api/v1/parameters', { updates: [{ id: 'intensity', value: v }] });
+    log('patch intensity=' + v + ' -> ' + JSON.stringify(r));
+  } catch (e) { log('patch err: ' + e); }
+}
+
+function sendRequest(frameNum, w, h, fmtByte, drop) {
+  if (!ws || ws.readyState !== 1) { log('WS not open'); return; }
+  const flags = drop ? 1 : 0;
+  const ver = 1;
+  const reserved = 0;
+  // 13 bytes little endian
+  const buf = new ArrayBuffer(13);
+  const dv = new DataView(buf);
+  dv.setUint8(0, 0x01);
+  dv.setUint32(1, frameNum >>> 0, true);
+  dv.setUint16(5, w || 640, true);
+  dv.setUint16(7, h || 360, true);
+  dv.setUint8(9, fmtByte);
+  dv.setUint8(10, flags);
+  dv.setUint8(11, ver);
+  dv.setUint8(12, reserved);
+  ws.send(buf);
+}
+
+function handleBinaryMessage(ev) {
+  const ab = ev.data; // ArrayBuffer because we set binaryType
+  if (!(ab instanceof ArrayBuffer)) return;
+  const dv = new DataView(ab);
+  const mt = dv.getUint8(0);
+  if (mt === 0x02) { // FRAME
+    const fn = dv.getUint32(1, true);
+    const w = dv.getUint16(5, true);
+    const h = dv.getUint16(7, true);
+    const fmt = dv.getUint8(9);
+    const plen = dv.getUint32(10, true);
+    const payload = ab.slice(14, 14 + plen);
+
+    lastFrameNum = fn;
+    frameCount++;
+
+    // paint
+    setCanvasSize(w, h);
+    const blob = new Blob([payload], { type: fmt === 1 ? 'image/webp' : 'image/jpeg' });
+    createImageBitmap(blob).then(bmp => {
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    }).catch(() => {
+      // fallback: try to draw via data url (slower)
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => { ctx.drawImage(img, 0, 0, c.width, c.height); };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(blob);
+    });
+
+    // fps
+    const now = performance.now();
+    if (now - lastFpsTime > 800) {
+      fps = frameCount / ((now - lastFpsTime) / 1000);
+      frameCount = 0;
+      lastFpsTime = now;
+      updateStats();
+    }
+  } else if (mt === 0xFF) {
+    const len = dv.getUint16(1, true);
+    const msg = new TextDecoder().decode(new Uint8Array(ab, 3, len));
+    log('WS ERROR: ' + msg);
+    dropped++;
+    updateStats();
+  }
+}
+
+async function connectWS() {
+  const host = document.getElementById('host').value.trim();
+  const port = document.getElementById('port').value.trim();
+  const url = `ws://${host}:${port}/api/v1/viewport/stream`;
+  if (ws) { try { ws.close(); } catch(e){} }
+  log('connecting ' + url);
+  ws = new WebSocket(url);
+  ws.binaryType = 'arraybuffer';
+  ws.onopen = () => { log('WS open'); updateStats(); };
+  ws.onclose = () => { log('WS closed'); ws = null; updateStats(); };
+  ws.onerror = (e) => { log('WS error'); };
+  ws.onmessage = handleBinaryMessage;
+}
+
+function disconnect() { if (ws) ws.close(); }
+
+document.getElementById('connect').onclick = connectWS;
+document.getElementById('disconnect').onclick = disconnect;
+
+document.getElementById('loadM1').onclick = () => doLoad().catch(e => log('load err ' + e));
+document.getElementById('getManifest').onclick = async () => {
+  try { log('manifest: ' + JSON.stringify(await rest('GET', '/api/v1/manifest'))); } catch(e){ log('manifest ' + e); }
+};
+document.getElementById('health').onclick = async () => {
+  try { log('health: ' + JSON.stringify(await rest('GET', '/api/v1/health'))); } catch(e){ log('health ' + e); }
+};
+
+const valEl = document.getElementById('val');
+const valLabel = document.getElementById('valLabel');
+valEl.oninput = () => { valLabel.textContent = valEl.value; };
+document.getElementById('patch').onclick = () => doPatch().catch(e => log('patch ' + e));
+
+document.getElementById('reqFrame').onclick = () => {
+  const fmt = parseInt(document.getElementById('fmt').value, 10);
+  const drop = document.getElementById('drop').checked;
+  sendRequest(0, c.width, c.height, fmt, drop);
+};
+document.getElementById('reqBig').onclick = () => {
+  const fmt = parseInt(document.getElementById('fmt').value, 10);
+  const drop = document.getElementById('drop').checked;
+  sendRequest(0, 960, 540, fmt, drop);
+};
+
+document.getElementById('burst').onclick = () => {
+  const fmt = parseInt(document.getElementById('fmt').value, 10);
+  const drop = false;
+  for (let i = 0; i < 30; i++) {
+    // small delay so we don't completely overwhelm the tiny queue in one tick
+    setTimeout(() => sendRequest(i % 8, 480, 270, fmt, drop), i * 4);
+  }
+  log('normal burst sent');
+};
+
+document.getElementById('scrub').onclick = () => {
+  const fmt = parseInt(document.getElementById('fmt').value, 10);
+  const base = 200;
+  for (let i = 0; i < 40; i++) {
+    const fn = base + i;
+    setTimeout(() => sendRequest(fn, 400, 300, fmt, true /* drop */), i * 2);
+  }
+  // one final clean request for the last one
+  setTimeout(() => sendRequest(base + 39, 400, 300, fmt, false), 90);
+  log('scrub burst (drop-stale) sent');
+};
+
+valLabel.textContent = valEl.value;
+updateStats();
+log('Ready. Start the broker first (scripts/dev.ps1 or --serve). Then Connect WS.');
+</script>
+</body>
+</html>

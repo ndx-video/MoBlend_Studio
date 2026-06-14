@@ -14,6 +14,7 @@ profile.cov
 go.work
 go.work.sum
 /vendor/
+engine/vendor/
 
 # Python
 __pycache__/

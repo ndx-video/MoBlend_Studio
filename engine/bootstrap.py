@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-print("[moblend] Mo.Blend engine bootstrap v0.1.0 (M1 — Engine Core)")
+print("[moblend] Mo.Blend engine bootstrap v0.2.0 (M2 — API Broker)")
 
 bpy: Any = None
 try:
@@ -52,12 +52,17 @@ if bpy is not None:
         pass
 
 # -------------------------------------------------------------------
-# Lightweight M1 CLI demo support.
+# Lightweight M1 CLI demo + M2 long-running broker support.
 # Everything after the first `--` in argv belongs to us.
-# Supported (very small surface for the ROADMAP checklist):
+# Supported (M1 demo):
 #   --load PATH
 #   --set ID=VALUE   (repeatable)
 #   --save
+# Supported (M2 broker):
+#   --serve                 start FastAPI + binary WS on 127.0.0.1:8000 (keeps Blender alive)
+#   --port N                override port (still loopback-only in M2)
+#   --load PATH             may be combined with --serve for immediate template availability
+# Unknown tokens are ignored (forward-safe for future flags).
 # -------------------------------------------------------------------
 def _parse_cli() -> dict[str, Any]:
     if "--" not in sys.argv:
@@ -67,7 +72,13 @@ def _parse_cli() -> dict[str, Any]:
     except ValueError:
         return {}
     raw = sys.argv[idx + 1 :]
-    result: dict[str, Any] = {"load": None, "sets": [], "save": False}
+    result: dict[str, Any] = {
+        "load": None,
+        "sets": [],
+        "save": False,
+        "serve": False,
+        "port": 8000,
+    }
     i = 0
     while i < len(raw):
         tok = raw[i]
@@ -83,7 +94,18 @@ def _parse_cli() -> dict[str, Any]:
             result["save"] = True
             i += 1
             continue
-        # Unknown token for demo mode — ignore (keeps future server flags safe)
+        if tok == "--serve":
+            result["serve"] = True
+            i += 1
+            continue
+        if tok == "--port" and i + 1 < len(raw):
+            try:
+                result["port"] = int(raw[i + 1])
+            except ValueError:
+                pass
+            i += 2
+            continue
+        # Unknown token — ignore (keeps future flags and M1/M2 coexistence safe)
         i += 1
     return result
 
@@ -155,6 +177,65 @@ def _run_m1_demo(cli: dict[str, Any]) -> int:
 
 
 cli_args = _parse_cli()
+
+# M2 long-running broker path (takes precedence; supports optional initial --load)
+if cli_args.get("serve"):
+    if bpy is None:
+        print("[moblend] --serve requires running inside Blender (bpy).")
+        sys.exit(1)
+    _script_dir = Path(__file__).parent
+    if str(_script_dir) not in sys.path:
+        sys.path.insert(0, str(_script_dir))
+
+    # M2: aggressively help Blender's embedded python find packages that were
+    # pip-installed into its own interpreter (common Windows embedded gotcha).
+    try:
+        import site
+        site.ENABLE_USER_SITE = True
+        # Add the site-packages next to the running python (if any) and common user locations
+        py_exe = getattr(sys, "executable", "")
+        candidates = []
+        if py_exe:
+            p = Path(py_exe).resolve()
+            candidates += [
+                p.parent.parent / "site-packages",
+                p.parent / "site-packages",
+                p.parent / "lib" / "site-packages",
+            ]
+        # User site + %APPDATA% python paths (pip --user etc.)
+        candidates += list(Path(site.getuserbase()) / "Python*" / "site-packages" for _ in [1])  # glob later
+        candidates.append(Path(os.environ.get("APPDATA", "")) / "Python" / "Python313" / "site-packages")
+        for c in candidates:
+            try:
+                cp = Path(c)
+                if cp.exists() and str(cp) not in sys.path:
+                    sys.path.insert(0, str(cp))
+            except Exception:
+                pass
+        # Also try the "lib" sibling of the current file tree in case of manual layout
+        for extra in (Path(_script_dir) / "vendor",):
+            if extra.exists() and str(extra) not in sys.path:
+                sys.path.insert(0, str(extra))
+    except Exception:
+        pass
+
+    try:
+        from moblend.server import serve_forever  # type: ignore
+    except ModuleNotFoundError as e:
+        print("[moblend] FATAL: broker dependencies missing inside this Blender's Python.")
+        print("    FastAPI/uvicorn must be installed into Blender's python (not your system python).")
+        print("    Recommended: run scripts/dev.ps1 (it auto-detects and pip-installs).")
+        print("    Manual: <blender-python-exe> -m pip install fastapi 'uvicorn[standard]'")
+        print(f"    Original error: {e}")
+        sys.exit(1)
+
+    port = int(cli_args.get("port") or 8000)
+    load_path = cli_args.get("load")
+    print(f"[moblend] entering serve mode on 127.0.0.1:{port}")
+    serve_forever(host="127.0.0.1", port=port, initial_load=load_path)
+    # serve_forever blocks forever (or until process kill)
+    sys.exit(0)
+
 if cli_args.get("load") or cli_args.get("sets") or cli_args.get("save"):
     # One-shot demo / verification path (satisfies the ROADMAP "CLI invocation" gate)
     if bpy is None:
@@ -169,8 +250,7 @@ if cli_args.get("load") or cli_args.get("sets") or cli_args.get("save"):
     sys.exit(code)
 
 # -------------------------------------------------------------------
-# Original M0 stub behavior (no demo flags) — keeps scripts/dev.ps1 happy
-# until the long-running server entrypoint is added in M2.
+# Original M0 stub behavior (no demo/serve flags) — keeps scripts/dev.ps1 happy.
 # -------------------------------------------------------------------
 if bpy is not None:
     print("[moblend] Stub executed cleanly inside Blender (no template/params yet — M1 demo requires --load etc).")

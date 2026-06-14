@@ -261,6 +261,16 @@ def _create_minimal_test_template() -> tuple[Path, dict[str, Any]]:
                 if not any(l.from_socket == geo_out and l.to_socket == geo_in for l in gn.links):
                     gn.links.new(geo_out, geo_in)
 
+    # Camera + light required for M2 render_frame / EEVEE viewport previews
+    if bpy.context.scene.camera is None:
+        bpy.ops.object.camera_add(location=(4.0, -4.0, 3.0))
+        cam = bpy.context.active_object
+        if cam is not None:
+            cam.rotation_euler = (1.1, 0.0, 0.785)
+            bpy.context.scene.camera = cam
+    if not any(o.type == "LIGHT" for o in bpy.data.objects):
+        bpy.ops.object.light_add(type="SUN", location=(2.0, 2.0, 5.0))
+
     # Save to a predictable temp location (will be cleaned by OS; shadows live next to it)
     tmp_dir = Path(tempfile.gettempdir())
     out_path = tmp_dir / "m1_minimal_test.mo.blend"

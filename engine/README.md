@@ -10,16 +10,20 @@ blender --background --factory-startup --python ...
 
 External tooling (tests, dev scripts, type checkers) may import it under a real Python for static analysis only.
 
-## Current status (M1 — Engine Core)
+## Current status (M2 — API Broker)
 
-- `load_template(path)` — opens a strict `.mo.blend` (rejects plain `.blend`), parses + lightly validates the manifest embedded at `scene['moblend_manifest']`.
-- `set_parameter(id, value)` — coerces the high-level value, resolves the target by `node_target` + stable `socket_identifier` (never index), writes the interface `default_value`, and flags the depsgraph.
-- `save_project(..., incremental=True)` — runs `orphans_purge()`, rotates the `.01`–`.05` shadow backups when incremental, then `save_as_mainfile`.
-- Full support for the core scalar parameter types: `string`/`text`, `int`, `float`, `bool`, `color_rgba`, `enum`.
-- Security: `use_scripts_auto_execute = False` is forced on every entry.
-- No external runtime dependencies (bpy is supplied by Blender).
+- All of M1 (load / set_parameter / save + shadows + manifest + coercion by stable identifier).
+- `render_frame(frame, w, h, format)` — Eevee render to JPEG/WEBP bytes (honors client size, restores settings, temp-file based, no extra imaging libs).
+- Full broker: FastAPI/uvicorn on 127.0.0.1:8000 (REST + binary WS viewport).
+  - `GET /api/v1/manifest`, `PATCH /api/v1/parameters`, `POST /api/v1/project/load`, `POST /save`, `GET /health`, `/templates` (stub).
+  - `WS /api/v1/viewport/stream` — exact 13-byte LE REQUEST_FRAME / FRAME / ERROR wire (PRD 3 §3.2).
+  - Action queue (bounded) + `bpy.app.timers` consumer; 429 on flood; stale drop for scrubbing.
+  - CORS for `http://wails.localhost` + localhost dev origins.
+- `bootstrap.py --serve [--port N] [--load PATH]` — long-running entrypoint (M1 one-shots unchanged).
+- Runtime deps: `fastapi`, `uvicorn[standard]` (auto-installed into the *Blender python* by `scripts/dev.ps1`).
+- Verification clients: `m2_broker_client.py` (automated fps + protocol) + `m2_viewport_tester.html` (visual canvas).
 
-Out of scope for M1 (see ROADMAP): broker (FastAPI), viewport streaming, slots/timeline, asset ingestion (image/video/font), crash recovery, config, MCP.
+Security flag still forced early. No external runtime image libs. Still zero Go/desktop changes (M3).
 
 ## Verification commands (M1 gates)
 
@@ -70,19 +74,55 @@ engine/
 │   ├── nodes.py          # find_target, resolve by identifier, full coercion table, apply + depsgraph
 │   └── io.py             # shadow_rotate (.01–.05) + orphans_purge
 └── tests/
-    └── m1_roundtrip.py   # The self-contained integration verifier (synthetic template generator + asserts)
+    ├── m1_roundtrip.py         # M1 synthetic + roundtrip assertions
+    ├── m2_broker_client.py     # Host Python: automated REST + binary WS fps / protocol / stale-drop proof
+    └── m2_viewport_tester.html # Zero-dep browser canvas test (native WS + paint + scrub + FPS)
 ```
+
+## Verification commands (M2 gates + M1 regression)
+
+These must succeed with **zero manual Blender UI**.
+
+### 1. One-command dev (recommended)
+```pwsh
+pwsh -ExecutionPolicy Bypass -File scripts\dev.ps1
+```
+Runs M1 roundtrip, installs broker deps into Blender python, launches `--serve` (pre-loads M1 test template if present), prints REST smoke, and gives exact commands for the two M2 clients.
+
+### 2. Direct long-running broker (with initial template)
+```pwsh
+blender --background --factory-startup --python engine\bootstrap.py -- `
+  --serve --load "$env:TEMP\m1_minimal_test.mo.blend"
+```
+(Then in another terminal: the client or open the .html tester.)
+
+### 3. M2 automated proof (host Python)
+```pwsh
+# one-time
+pip install -q websockets httpx
+python -m engine.tests.m2_broker_client
+```
+Expects "M2 BROKER PASS", measured fps, sample frames in %TEMP%, protocol checks, stale-drop behavior.
+
+### 4. Interactive visual proof
+Open `engine/tests/m2_viewport_tester.html` in Edge/Chrome while the broker is serving. Use the forms/buttons to load, mutate, request frames, and scrub with the drop-stale flag. Canvas + on-screen FPS.
+
+### 5. M1 regression (still exercised by dev.ps1)
+The original three M1 commands continue to work unchanged.
+
+Swagger / OpenAPI is at http://127.0.0.1:8000/docs when the broker is running.
 
 ## Developing / testing changes
 
 - Make edits under `engine/moblend/`.
-- Re-run the verification commands above (especially #2 and #3).
-- The code aims to be compatible with the ruff/mypy configuration declared in `pyproject.toml`.
-- All real work happens under `bpy`; the dual-mode guards in `bootstrap.py` only exist so the file can be imported for linting outside Blender.
+- Re-run `scripts/dev.ps1` (or the direct commands) after changes.
+- `python -c "import moblend; help(moblend)"` works from host Python for docs.
+- All real bpy work (including the timer consumer) stays on the main thread.
 
 ## Next milestones (context for readers)
 
-- M2 will turn the long-running `bootstrap` into the FastAPI + WebSocket broker on 127.0.0.1:8000. The one-shot demo path in `bootstrap.py` can stay for manual smoke tests.
-- Real authored `.mo.blend` templates (from the registry / PRD 8 addon) will become additional test vectors once they exist (M4+).
+- M3 will have the Wails desktop (Go) spawn/supervise the broker and the React frontend will talk HTTP + direct binary WS to 127.0.0.1:8000.
+- M4 adds real `GET /api/v1/templates` backed by the registry index (currently a stub).
+- Slots, asset ingest, MCP, and video export jobs come later.
 
-See [ROADMAP.md](../ROADMAP.md), [PRD 1](../specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](../specs/PRD%202%20-%20Platform%20(Mo.Blend%20Python%20Engine).md), and the [API & Function Spec](../specs/Mo.Blend%20API%20%26%20Function%20Spec.md).
+See [ROADMAP.md](../ROADMAP.md), [PRD 3](../specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md), [API & Function Spec](../specs/Mo.Blend%20API%20%26%20Function%20Spec.md), and AGENTS.md (single-port, binary WS only, queue+timer rules).
