@@ -142,6 +142,6 @@ At the start of each milestone, bring into context:
 3. [API spec](specs/Mo.Blend%20API%20&%20Function%20Spec.md) when touching the broker or clients
 4. Latest entries in [.progress/](.progress/) for the current milestone (audit trail; append-only)
 
-When work completes, agents **must** add a progress file per [.progress/README.md](.progress/README.md) — `{milestone}.{index}.{descriptor}.md` (e.g. `M1.001.engine-bootstrap.md`). Never edit prior progress files.
+When work completes, agents **must** add a progress file per [.progress/README.md](.progress/README.md) — `{milestone}.{index}.{descriptor}.md` (e.g. `M001.001.engine-bootstrap.md`; the milestone token is zero-padded to three digits, so M0 → `M000`). Never edit prior progress files.
 
 No separate `.planning/` tree — PRDs + this ROADMAP define targets; `.progress/` records history.

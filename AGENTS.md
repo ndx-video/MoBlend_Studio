@@ -80,9 +80,9 @@ Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 scaffold → M1 engine → M2 b
 Strict rules:
 
 1. **Append only.** Create a new file under `.progress/` when work is done. **Never** edit, rename, or delete an existing progress file.
-2. **Filename:** `{milestone}.{index}.{descriptor}.md` — e.g. `M2.001.ws-handshake-stub.md`. Three-digit index per milestone; use the next available number.
+2. **Filename:** `{milestone}.{index}.{descriptor}.md` — e.g. `M002.001.ws-handshake-stub.md`. Milestone token is `M` + the ROADMAP milestone number zero-padded to three digits (M0 → `M000`); index is three-digit per milestone. Use the next available number.
 3. **Automatic.** Agents must write a progress entry at the end of any non-trivial session (implementation, spec/architecture changes, decisions, regressions).
-4. **Regressions and reversals.** Document as a **new** entry (e.g. `M9.013.deleted-m9-milestone.md`). Do not revise or remove earlier entries for the same topic.
+4. **Regressions and reversals.** Document as a **new** entry (e.g. `M009.013.deleted-m9-milestone.md`). Do not revise or remove earlier entries for the same topic.
 5. **Immutability.** The log is an audit trail of entailed decision-making. Gaps in numbering are fine; renumbering is forbidden.
 
 Use the entry template in `.progress/README.md`. Link related commits, PRDs, and prior progress files.

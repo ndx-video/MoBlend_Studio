@@ -12,11 +12,13 @@ This folder is **tracked in git**. Do not add `.progress/` to `.gitignore`.
 
 | Segment | Format | Example |
 |---------|--------|---------|
-| `milestone` | Roadmap ID: `M0`, `M1`, … `M6`, or adhoc `M*` if ROADMAP gains new milestones | `M0`, `M2` |
+| `milestone` | `M` + the ROADMAP milestone number **zero-padded to three digits** (`M000` = M0, `M001` = M1, … `M006` = M6; adhoc `M0NN` if ROADMAP gains new milestones) | `M000`, `M002` |
 | `index` | Three-digit zero-padded sequence **per milestone**, monotonic | `001`, `002`, `013` |
 | `descriptor` | Lowercase kebab-case summary of this entry | `websocket-viewport-spec` |
 
-**Full example:** `M0.002.websocket-viewport-spec.md`
+**Full example:** `M000.002.websocket-viewport-spec.md`
+
+> Only the **filename** milestone token is zero-padded. Prose references to a roadmap milestone (e.g. "M0 — Specs & Scaffold", the `**Milestone:**` line in an entry) keep the ROADMAP's short form.
 
 ### Index rules
 
@@ -41,10 +43,10 @@ This folder is **tracked in git**. Do not add `.progress/` to `.gitignore`.
 
 If milestone M9 is added then removed, you might have:
 
-- `M9.001.add-m9-milestone.md`
-- `M9.013.deleted-m9-milestone.md`
+- `M009.001.add-m9-milestone.md`
+- `M009.013.deleted-m9-milestone.md`
 
-All prior M9.* files remain. Nothing is deleted.
+All prior `M009.*` files remain. Nothing is deleted.
 
 ## When to write an entry
 
@@ -105,7 +107,7 @@ ROADMAP “done when” checklists describe targets; `.progress/` records eviden
 Before creating a file, list existing entries for the milestone:
 
 ```bash
-ls .progress/M0.*.md
+ls .progress/M000.*.md
 ```
 
 Use max(index) + 1. If none exist, start at `001`.
