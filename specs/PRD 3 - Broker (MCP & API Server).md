@@ -1,4 +1,4 @@
-# **PRD 3: MCP & API Server (The Broker)**
+# **PRD 3: Broker (MCP & API Server)**
 
 ## **1\. Objective**
 
@@ -20,7 +20,7 @@ Blender’s internal API (bpy) is strictly single-threaded and notoriously unfor
 
 * **Core Framework:** FastAPI (running via the uvicorn ASGI server) is the mandated framework for the REST and WebSocket/SSE planes. It provides native async support, exceptionally low overhead, and automatically generates OpenAPI (Swagger) documentation, which is crucial for third-party developers building custom Mo.Blend integrations.  
 * **Process Lifecycle:** The API Server is booted from within the moblend\_engine.py script immediately after Blender finishes its headless initialization.  
-* **Port Binding & Config:** Defaults to localhost:8000. This is configurable via CLI arguments (--moblend-port) or system-level configuration files (e.g., editing vi \~/.moblend/server\_config.json).
+* **Port Binding & Config:** Defaults to localhost:8000. This is configurable via CLI arguments (--moblend-port) or the single canonical suite config file `<moblend_home>/config.json` (Windows `%USERPROFILE%\.moblend\config.json`, Linux/macOS `~/.moblend/config.json` — the same file the engine and desktop app read; see PRD 1 §5). There is no separate `server_config.json`.  
 
 ### **2.3 Future Horizontal Scaling (Kubernetes)**
 
@@ -36,7 +36,9 @@ The Control Plane handles standard application state, routing structured JSON pa
 
 * **State Management:** \* POST /api/v1/project/load: Swaps the active template environment.  
   * POST /api/v1/project/save: Flushes the current in-memory state to the local disk, managing the incremental .01, .02 shadow backups.  
-* **Manifest Delivery (GET /api/v1/manifest):** Allows external clients to dynamically generate their UI. Mo.Blend Studio (Wails) uses this to paint its property inspector, ensuring the UI always perfectly matches the specific parameters exposed by the loaded template.  
+* **Manifest Delivery (GET /api/v1/manifest):** Allows external clients to dynamically generate their UI. Mo.Blend Studio (Wails) uses this to paint its property inspector, ensuring the UI always perfectly matches the specific parameters exposed by the loaded template. The returned document conforms to the canonical [`manifest.schema.json`](manifest.schema.json).  
+* **Template Catalog (GET /api/v1/templates):** Returns the broker's cached copy of the registry `index.json` — the single authoritative listing consumed by all clients and the `moblend_list_templates` MCP tool. See the [API & Function Spec §2](Mo.Blend%20API%20%26%20Function%20Spec.md) and PRD 7 §5 for the registry-fetch ownership split.  
+* **Timeline (PATCH /api/v1/slots):** Updates slot time bounds and optional `preset_id` values; maps to `engine.set_slot`.  
 * **Parameter Mutation (PATCH /api/v1/parameters):** Accepts an array of delta changes.  
   * *Pre-flight Validation:* Before the payload ever reaches the Blender Action Queue, FastAPI validates the data types against the JSON manifest. If a client attempts to pass a string "blue" to a parameter expecting a color\_rgba float array, the Broker rejects it immediately with a 422 Unprocessable Entity, protecting the engine.  
 * **Async Task Handoff (POST /api/v1/render/export):** Kicks off heavy, multi-frame video rendering jobs. Because rendering a 10-second animation can take minutes, this endpoint immediately returns a 202 Accepted alongside a unique job\_id. Clients then poll GET /api/v1/render/status/{job\_id} to receive live progress percentages and estimated time remaining.
@@ -66,7 +68,8 @@ The Data Plane handles the real-time visual feedback loop for Mo.Blend Studio (W
 | 7 | 2 | `height` (uint16) |
 | 9 | 1 | `format` — `0`=JPEG, `1`=WebP |
 | 10 | 1 | `flags` — bit0: drop if stale (scrubbing) |
-| 11 | 2 | reserved |
+| 11 | 1 | `protocol_version` — wire-format version, currently `1` |
+| 12 | 1 | reserved |
 
 **Server → client (frame response)** — variable length:
 
@@ -81,6 +84,10 @@ The Data Plane handles the real-time visual feedback loop for Mo.Blend Studio (W
 | 14 | N | compressed image bytes |
 
 **Server → client (error)** — `msg_type` = `0xFF`, followed by uint16 UTF-8 error code length and message.
+
+**Protocol versioning:** The `protocol_version` byte in REQUEST_FRAME lets the wire format evolve in lock-step with the REST `/api/v1` surface. The current version is `1`. If a client sends a `protocol_version` the broker does not support, the broker replies with an ERROR (`0xFF`) message rather than guessing. Reserved header bytes default to `0`.
+
+**Frame addressing (`frame_number` vs `time_seconds`):** The binary protocol addresses frames by absolute `frame_number` (uint32). The MCP `moblend_render_preview` tool accepts `time_seconds` (float) for agent convenience; the broker converts it to a frame via `frame = round(time_seconds × project_fps)` before enqueueing. There is one canonical frame index; seconds are a convenience input only.
 
 **Execution Flow:**
 
@@ -105,7 +112,8 @@ This plane implements the standardized MCP JSON-RPC specification, allowing adva
 
 * **Transport Layer:** Utilizes Server-Sent Events (SSE) over HTTP for remote agents, or standard input/output (stdio) if the agent wrapper is running locally alongside the server.  
 * **Exposed Tools & LLM Strategy:**  
-  * moblend\_inspect\_template: Yields the schema of available parameters. The LLM must call this to understand the mathematical boundaries and options of the active graphic before attempting edits.  
+  * moblend\_list\_templates: Lists registry templates (backed by `GET /api/v1/templates` — the cached `index.json`) so the agent can pick one before inspecting it. Returns catalog metadata only; no binaries are downloaded. See the full tool contract in the [API & Function Spec §3](Mo.Blend%20API%20%26%20Function%20Spec.md).  
+  * moblend\_inspect\_template: Yields the schema of available parameters (conforms to [`manifest.schema.json`](manifest.schema.json)). The LLM must call this to understand the mathematical boundaries and options of the active graphic before attempting edits.  
   * moblend\_apply\_parameters: Safely applies LLM-generated parameter changes. The LLM is instructed to only send *delta updates* (parameters that differ from the current state) to conserve token usage and execution time.  
   * moblend\_render\_preview: Triggers a still render and returns a temporary local URL or a compressed image payload. This allows the LLM's associated Vision-Language Model to "see" its work and self-correct alignment or color-clashing issues autonomously.
 
@@ -113,9 +121,15 @@ This plane implements the standardized MCP JSON-RPC specification, allowing adva
 
 Because the Mo.Blend API has the power to write files (renders) and download external assets to the local machine, its security posture must be airtight.
 
-* **Local-First Default:** The uvicorn server must bind strictly to 127.0.0.1 by default. Exposing the server to 0.0.0.0 (for remote network access) requires an explicit CLI flag override (--bind-public) and will trigger a prominent terminal warning.  
-* **CORS Policies:** Cross-Origin Resource Sharing is strictly enforced. The API will outright reject browser preflight requests unless they originate from explicitly whitelisted domains. By default, only local UI origins (e.g., `http://wails.localhost` for Wails production builds, `http://localhost:<dev-port>` for Wails development, and local OBS panel domains) are permitted.  
-* **Asset Validation & SSRF Prevention:** Endpoints that accept external URLs (like downloading a user's logo for ingestion into a graphic) are prime targets for Server-Side Request Forgery (SSRF).  
-  * The Broker must enforce strict MIME-type sniffing before downloading to ensure the file is actually an image or font.  
-  * It must enforce strict file-size limits (e.g., max 10MB) to prevent denial-of-service attacks via massive file downloads.  
-  * Downloads are quarantined to a temporary directory and wiped on session exit.
+* **Local-First Default:** The uvicorn server must bind strictly to 127.0.0.1 by default. Exposing the server beyond loopback (for remote network access such as the OBS dual-PC setup in PRD 5 §4) requires an explicit CLI flag override (`--bind-public`) and will trigger a prominent terminal warning.  
+* **Authentication (required for any non-loopback bind):** When the server is loopback-only, no token is required (the OS already isolates the socket to the local user). The moment `--bind-public` is used, the broker **must** require a bearer token on every REST request and as a query/subprotocol token on the viewport WebSocket:  
+  * A shared secret is generated (or read from `<moblend_home>/config.json`) at startup and printed once to the operator's console.  
+  * Requests without a valid `Authorization: Bearer <token>` header are rejected with `401`. WebSocket upgrades without the token are refused.  
+  * This closes the gap where the PRD 5 dual-PC scenario would otherwise expose a fully unauthenticated file-writing, asset-downloading engine to the LAN. The same token must be configured in the OBS panel (see PRD 5 §4).  
+* **CORS Policies:** Cross-Origin Resource Sharing is strictly enforced. The API will outright reject browser preflight requests unless they originate from explicitly whitelisted domains. By default, only local UI origins (e.g., `http://wails.localhost` for Wails production builds, `http://localhost:<dev-port>` for Wails development, and local OBS panel domains) are permitted. When `--bind-public` is set, the operator must explicitly add the remote panel origin to the allowlist; wildcard (`*`) origins are never permitted.  
+* **Asset Validation & SSRF Prevention:** Endpoints that accept external URLs (like downloading a user's logo for ingestion into a graphic) are prime targets for Server-Side Request Forgery (SSRF). The broker must:  
+  * Enforce strict MIME-type sniffing (magic-number validation) before and after download to ensure the file is actually an image, video, or font — not a disguised payload.  
+  * Enforce strict file-size limits (e.g., max 10MB) to prevent denial-of-service via massive downloads.  
+  * **Block requests to non-public hosts:** resolve the target hostname and reject any address in loopback (`127.0.0.0/8`, `::1`), private (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`), link-local (`169.254.0.0/16`, `fe80::/10`), and cloud metadata ranges (notably `169.254.169.254`). Apply this check to the initial URL **and** to every hop.  
+  * **Disallow following redirects to blocked hosts** — re-validate the destination of each 3xx redirect against the rules above (a public URL that 302-redirects to `169.254.169.254` must be refused).  
+  * Quarantine downloads to a temporary directory (see PRD 2 §5) and wipe them on session exit.

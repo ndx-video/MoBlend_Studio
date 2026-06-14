@@ -1,4 +1,4 @@
-# **PRD 4: Wails Desktop UI (Mo.Blend Studio)**
+# **PRD 4: Studio (Wails Desktop UI)**
 
 ## **1\. Objective**
 
@@ -74,11 +74,13 @@ To prevent UI complexity creep, the application enforces a strict parameter-only
 ### **6.2 Dynamic Parameter Grid (Control Plane)**
 
 * **Generation:** When a project is loaded, the UI parses the JSON manifest and auto-generates the inspector panel.  
-* **Component Mapping:**  
-  * "type": "string" \-\> Renders a Text Input field.  
-  * "type": "color\_rgba" \-\> Renders a Color Picker.  
-  * "type": "float", "min": 0, "max": 1 \-\> Renders a Slider.  
-  * "type": "enum", "options": \["Neon", "Flat"\] \-\> Renders a Dropdown.  
+* **Component Mapping:** The manifest `type` values are the canonical set defined in [`manifest.schema.json`](manifest.schema.json); the inspector maps each to a control:  
+  * "type": "string" \-\> single-line Text Input; "type": "text" \-\> multi-line Text Area.  
+  * "type": "color\_rgba" \-\> Color Picker.  
+  * "type": "float" / "int" with "min"/"max" \-\> Slider; without bounds \-\> numeric input.  
+  * "type": "bool" \-\> Toggle/Checkbox.  
+  * "type": "enum", "options": \["Neon", "Flat"\] \-\> Dropdown.  
+  * "type": "image" / "video" / "font" \-\> Asset picker (drag-drop + file dialog) routed through the §6.4 sandbox ingestion flow.  
 * **Throttling:** Fast-changing UI elements (like dragging a slider) must be debounced/throttled before sending PATCH /parameters requests to prevent flooding the Blender Action Queue.
 
 ### **6.3 Slot-Based Timeline**
@@ -97,6 +99,6 @@ To prevent UI complexity creep, the application enforces a strict parameter-only
 
 ## **7\. System Configuration & Security**
 
-* **Config Files:** Advanced configuration (like pointing the UI to a remote Mo.Blend cluster instead of localhost, or setting memory limits) is handled via a JSON configuration file. Users will use standard terminal text editors to modify this (e.g., vi \~/.moblend/config.json).  
+* **Config Files:** Advanced configuration (pointing the UI to a remote Mo.Blend cluster instead of localhost, or setting memory limits) is handled via the single canonical suite config file `<moblend_home>/config.json` — Windows `%USERPROFILE%\.moblend\config.json` (primary), Linux/macOS `~/.moblend/config.json`. This is the same file the engine and broker read (see PRD 1 §5 and PRD 3 §2.2). Edit it with any platform-appropriate text editor (Notepad/VS Code on Windows; `vi`/`nano` on Linux/macOS).  
 * **Process Watchdog:** If the Mo.Blend Studio app closes unexpectedly, the Go backend must send a kill signal to the local Mo.Blend headless process to prevent orphaned Blender instances from consuming system RAM in the background. Go `os/exec` and signal handling are responsible for monitoring this lifecycle.  
 * **Template CDN Fetch:** When a user installs a template from the registry, the Go backend streams the .mo.blend binary via `http.Get` to `~/.moblend/templates/`.

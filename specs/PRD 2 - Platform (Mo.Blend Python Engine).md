@@ -1,4 +1,4 @@
-# **PRD 2: Mo.Blend Python Engine (The Brain)**
+# **PRD 2: Platform (Mo.Blend Python Engine)**
 
 ## **1\. Objective**
 
@@ -25,9 +25,12 @@ To protect against file corruption (e.g., sudden power loss during a disk write)
 Every Mo.Blend template contains a strict, author-defined JSON schema embedded directly within the bpy.types.Scene custom properties (specifically stored at bpy.context.scene\['moblend\_manifest'\]).
 
 * **Purpose:** This manifest acts as the immutable API contract for the template. It completely decouples the front-end UI and LLM agents from the underlying complexity of the Blender node graph. External clients do not need to know *how* a glow effect is wired; they only need to know it accepts a float between 0 and 5\.  
+* **Canonical schema:** The full, authoritative manifest contract lives in [`manifest.schema.json`](manifest.schema.json) (also referenced by the broker and registry CI). The example below is illustrative; the schema is normative.  
+* **Stable socket targeting (not positional):** Each parameter binds to a node socket via `node_target` (the node group or material name) plus `socket_identifier` — the **stable Blender node-tree interface identifier** (e.g. `"Socket_2"`), *not* a positional `socket_index`. Positional indices break the instant an author reorders or inserts sockets; identifiers are stable across edits. (Authors/tooling read these identifiers from the node-tree interface; the Template Inspector addon — PRD 8 — generates them.)  
+* **Canonical parameter types:** The allowed `type` values are a fixed registry shared across all clients — `string`, `text`, `int`, `float`, `bool`, `color_rgba`, `enum`, `image`, `video`, `font`. See `manifest.schema.json` and the UI mapping in PRD 4 §6.2.  
 * **Expanded Schema Example:**  
   {  
-    "version": "1.1",  
+    "version": "1.0",  
     "template\_id": "lower-third-ninja",  
     "parameters": \[  
       {  
@@ -35,7 +38,7 @@ Every Mo.Blend template contains a strict, author-defined JSON schema embedded d
         "type": "string",  
         "ui\_group": "Typography",  
         "node\_target": "NodeGroup\_TextGen",  
-        "socket\_index": 0,  
+        "socket\_identifier": "Socket\_0",  
         "default": "Hello World"  
       },  
       {  
@@ -43,7 +46,7 @@ Every Mo.Blend template contains a strict, author-defined JSON schema embedded d
         "type": "color\_rgba",  
         "ui\_group": "Style",  
         "node\_target": "Material\_Neon",  
-        "socket\_index": 2,  
+        "socket\_identifier": "Socket\_2",  
         "default": "\#00FFAA"  
       },  
       {  
@@ -53,7 +56,7 @@ Every Mo.Blend template contains a strict, author-defined JSON schema embedded d
         "max": 5.0,  
         "ui\_group": "Style",  
         "node\_target": "NodeGroup\_PostProcess",  
-        "socket\_index": 1,  
+        "socket\_identifier": "Socket\_1",  
         "default": 1.2  
       }  
     \]  
@@ -62,7 +65,7 @@ Every Mo.Blend template contains a strict, author-defined JSON schema embedded d
 * **Execution & Type Coercion:** When the engine receives an API command such as UpdateParameter(id="primary\_color", value="\#FF0000"), the process is heavily guarded:  
   1. **Lookup:** The engine searches the manifest for the id.  
   2. **Coercion:** It translates the high-level input into Blender's native format. For example, it converts the HEX string \#FF0000 into a linear RGB float array (1.0, 0.0, 0.0, 1.0).  
-  3. **Mutation:** It locates the exact data block (bpy.data.node\_groups\["Material\_Neon"\]), targets the input socket (inputs\[2\]), and updates the default\_value.  
+  3. **Mutation:** It locates the exact data block (bpy.data.node\_groups\["Material\_Neon"\]) and resolves the input socket by its stable interface identifier (e.g. the socket whose `identifier == "Socket_2"`), then updates the default\_value. Resolution is by identifier, never by raw list position.  
   4. **Graph Update:** It explicitly flags the Dependency Graph for an update (bpy.context.evaluated\_depsgraph\_get().update()) to ensure the viewport stream reflects the change on the very next frame.
 
 ## **4\. Slot-Based Timeline Manager**
@@ -80,8 +83,8 @@ To completely abstract traditional keyframes and dope sheets away from casual us
 
 The engine must securely and efficiently handle external binary assets requested by the API (images, videos, vector graphics, and custom fonts) to support highly customized marketing output.
 
-* **Fetching & Ephemeral Caching:** Downloads URLs via secure HTTP streams to an ephemeral local cache directory (e.g., /tmp/moblend\_assets/).  
+* **Fetching & Ephemeral Caching:** Downloads URLs via secure HTTP streams to an ephemeral local cache directory resolved from the OS temp location — `%TEMP%\moblend_assets\` on Windows (primary), `/tmp/moblend_assets/` on Linux/macOS. Always derive this path from the platform temp API (e.g. Python `tempfile.gettempdir()`), never hard-code a Unix path. The cache is wiped on session exit.  
 * **Strict Validation:** Prior to creating Blender data blocks, the engine verifies file signatures (magic numbers) to prevent disguised executables or malicious payloads from exploiting Blender's image parsers. Strict file size limits and dimension bounds are enforced to prevent VRAM overflow.  
-* **Hash-Based Deduplication:** To prevent bloating the project file when the same logo is requested multiple times, the engine calculates an MD5/SHA-256 hash of the downloaded asset. If an image with that hash already exists in bpy.data.images, the engine reuses the existing data block rather than creating a duplicate.  
+* **Hash-Based Deduplication:** To prevent bloating the project file when the same logo is requested multiple times, the engine calculates a **SHA-256** hash of the downloaded asset (MD5 is not used — its collision weakness makes it unsuitable even for cache keys). If an image with that hash already exists in bpy.data.images, the engine reuses the existing data block rather than creating a duplicate.  
 * **Injection Routing:** \* **Images/Video:** Creates or fetches the bpy.data.images data block and patches it into the designated Image Texture node defined in the manifest. For video files, it also configures the frame\_duration and use\_auto\_refresh flags.  
   * **Fonts:** Loads .ttf or .otf files into bpy.data.fonts and assigns the resulting font object directly to the target String to Curves geometry node, instantly updating the 3D typography in the viewport.
