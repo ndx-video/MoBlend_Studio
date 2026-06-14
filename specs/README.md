@@ -4,7 +4,7 @@
 
 ## **Executive Summary & Architectural Overview**
 
-The Mo.Blend ecosystem decouples a **Compute Engine** from the **User Interface**. A locked-down, headless Blender instance acts as an invisible rendering backend, so front-end clients—from a fast desktop app to chat-based LLM agents—drive complex 3D animations using only simple, predefined parameters (text, colors, durations). A Git-based template registry supplies the parametric `.mo.blend` files, ensuring high-quality, standardized output across all platforms.
+The Mo.Blend ecosystem decouples a **Compute Engine** from the **User Interface**. A locked-down, headless Blender instance acts as an invisible rendering backend, so front-end clients—from a fast desktop app to chat-based LLM agents—drive complex 3D animations using only simple, predefined parameters (text, colors, durations). The official template library (hosted at `lib.moblend.dev`, backed during beta by the GitOps `moblend-registry`) supplies the parametric `.mo.blend` files, ensuring high-quality, standardized output across all platforms. The project website and documentation live at `moblend.dev`.
 
 ## **Target Platforms**
 
@@ -23,8 +23,8 @@ The Mo.Blend ecosystem spans one core monorepo and two external repositories:
 | Repository | PRD(s) | Relationship |
 |------------|--------|--------------|
 | `MoBlend_Studio` (this repo) | 1–6 | Python/Go monorepo: headless engine, API broker, Wails desktop, OBS and Sentinel clients |
-| `moblend-registry` | 7 | Separate GitOps template CDN; clients consume via `index.json` raw URLs |
-| `MoBlend_TemplateInspector` | 8 | Separate Blender addon repo for template authors; publishes to the registry |
+| `moblend-registry` | 7 | Separate GitOps repo (source of truth + CI for templates); backs the official public template library at `lib.moblend.dev` |
+| `MoBlend_TemplateInspector` | 8 | Separate Blender addon repo for template authors; publishes to the registry (lib.moblend.dev) |
 
 ```
 MoBlend_Studio/
@@ -79,13 +79,13 @@ A lightweight HTML/JS dock running in OBS's built-in CEF. Fetches the template c
 
 An MCP client chat-and-canvas workspace. Control plane over REST/SSE for tool calls and state sync; data plane over the binary viewport WebSocket for zero-latency canvas painting. Drives the `moblend_list_templates` → `moblend_inspect_template` → `moblend_apply_parameters` → `moblend_render_preview` loop with delta updates and a JSON diff state inspector.
 
-### **PRD 7 — Mo.Blend Template Repository (The Registry)**
+### **PRD 7 — Mo.Blend Template Repository (The Registry / Official Library)**
 
-A GitOps registry in the separate `moblend-registry` repo. Strict per-template artifacts (`.mo.blend`, `.manifest.json`, `.webp`), CI that runs a no-execute AST security scan, manifest-schema validation, Blender-compatibility and asset-size checks, and a generated flattened `index.json`. Clients fetch the catalog via the broker's `GET /api/v1/templates`.
+The `moblend-registry` GitOps repo (separate) is the source of truth and CI engine. It produces the catalog and artifacts that power the official public template library at `lib.moblend.dev` (beta: static/raw delivery; future: full web portal). Strict per-template artifacts (`.mo.blend`, `.manifest.json`, `.webp`), CI validation, and a generated flattened `index.json`. Clients fetch the catalog via the broker's `GET /api/v1/templates`. The project site (news/info/docs) is at `moblend.dev`.
 
 ### **PRD 8 — Mo.Blend Template Inspector (External — Blender Addon)**
 
-**Objective:** A native Blender addon for advanced creators and template authors. It validates manifests, previews the casual-user experience, and packages templates for submission to the registry.
+**Objective:** A native Blender addon for advanced creators and template authors. It validates manifests, previews the casual-user experience, and packages templates for submission to the official library (`lib.moblend.dev` via the registry).
 
 **Repository:** `MoBlend_TemplateInspector` (separate repo; not yet created). See the External Repositories table above.
 
@@ -123,9 +123,9 @@ Project nomenclature. Codenames (**Platform**, **Broker**, **Studio**, **Sentine
 | **Studio** | 4 | Mo.Blend Studio — the Wails v2 desktop app (Go backend + React/TS frontend), the casual-user, no-nodes editor. |
 | **OBS Panel** | 5 | The OBS Extension Panel — a lightweight HTML/JS dock running in OBS's built-in CEF for render-and-inject broadcast graphics. (No codename; descriptive name only.) |
 | **Sentinel** | 6 | The Sentinel Kit UI — an MCP chat-and-canvas workspace where an LLM acts as a virtual technical artist. |
-| **Suite Manager** | 4 | The hub panel inside Studio that tracks/install/health-checks the suite components (Blender, Platform, Broker, registry connection). |
-| **Template Inspector** | 8 | External Blender addon (`MoBlend_TemplateInspector`) for authoring/validating templates and prepping them for the registry. |
-| **Registry** | 7 | `moblend-registry` — the GitOps template CDN clients consume via `index.json` raw URLs. |
+| **Suite Manager** | 4 | The hub panel inside Studio that tracks/install/health-checks the suite components (Blender, Platform, Broker, official template library connection). |
+| **Template Inspector** | 8 | External Blender addon (`MoBlend_TemplateInspector`) for authoring/validating templates and prepping them for the official library (via `moblend-registry`). |
+| **Registry** | 7 | `moblend-registry` GitOps backend; its content is exposed publicly as the official template library at `lib.moblend.dev` (beta delivery via raw Git + future web UI). |
 
 ### Domain terms
 
@@ -140,7 +140,7 @@ Project nomenclature. Codenames (**Platform**, **Broker**, **Studio**, **Sentine
 | **Action Queue** | The thread-safe `queue.Queue` the Broker's web thread pushes tasks onto; a `bpy.app.timers` consumer executes them on Blender's main thread. |
 | **Control / Data / Agent plane** | The Broker's three surfaces: REST (control), binary WebSocket viewport (data), MCP/JSON-RPC (agent). |
 | **EEVEE** | Blender's real-time rasterization render engine (the 4.2+ engine formerly dev-named "Eevee Next"); the exclusive renderer for Mo.Blend. |
-| **`index.json`** | The flattened catalog the registry CI generates; the Broker caches it and serves it via `GET /api/v1/templates`. |
+| **`index.json`** | The flattened catalog generated by registry CI (in `moblend-registry`); the Broker caches it (sourced from the official library at `lib.moblend.dev` or configured backing URL) and serves it via `GET /api/v1/templates`. |
 | **Shadow backup** | The rolling incremental save buffer (`.01`–`.05`) protecting against corruption. |
 | **`<moblend_home>`** | The suite config/data directory: `%USERPROFILE%\.moblend\` on Windows, `~/.moblend/` on Linux/macOS. |
 | **MCP** | Model Context Protocol — the JSON-RPC standard the Broker exposes so any compliant LLM can drive Mo.Blend via tools (`moblend_list_templates`, `moblend_inspect_template`, `moblend_apply_parameters`, `moblend_render_preview`). |

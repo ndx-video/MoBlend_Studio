@@ -17,8 +17,10 @@ Mo.Blend is a small set of cooperating components (codenames in **bold**). The *
 | **Studio** | 4 | Wails v2 desktop app — the casual-user, no-nodes editor. |
 | **OBS Panel** | 5 | OBS CEF dock for render-and-inject broadcast graphics. |
 | **Sentinel** | 6 | MCP chat-and-canvas workspace where an LLM acts as a virtual technical artist. |
-| **Registry** | 7 | `moblend-registry` — external GitOps template CDN. |
+| **Registry** | 7 | `moblend-registry` (GitOps) powering the official template library at `lib.moblend.dev`. |
 | **Template Inspector** | 8 | `MoBlend_TemplateInspector` — external Blender authoring addon. |
+
+**Public presence (pre-flight):** Project site & docs at [moblend.dev](https://moblend.dev); official template library at [lib.moblend.dev](https://lib.moblend.dev).
 
 ## Documentation map
 

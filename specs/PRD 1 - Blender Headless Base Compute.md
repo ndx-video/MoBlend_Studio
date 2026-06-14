@@ -33,16 +33,16 @@ The "renders identically on every machine" guarantee depends on a pinned Blender
 
 * **Minimum / target:** Blender **4.2 LTS** is the baseline (first release where the EEVEE rewrite formerly called "Eevee Next" is the default real-time engine). The engine targets the latest 4.2.x LTS patch and is validated against it.  
 * **Pinning:** The exact tested Blender version is recorded in `<moblend_home>/config.json` and surfaced by the Suite Manager (PRD 4 §4). The Suite Manager refuses to launch an out-of-range binary and warns the user.  
-* **Registry compatibility:** Templates declare a minimum Blender version in their manifest metadata; registry CI (PRD 7 §4) and the engine both check it before a template is used. Bumping the baseline is a deliberate, documented change — not implicit.  
+* **Library / registry compatibility:** Templates declare a minimum Blender version in their manifest metadata; registry CI in `moblend-registry` (PRD 7 §4) and the engine both check it before a template is used. Bumping the baseline is a deliberate, documented change — not implicit.  
 
 > Note on naming: "Eevee Next" was the development name for the engine that shipped as the default EEVEE in 4.2+. Specs use "EEVEE (4.2+)" to avoid ambiguity; older "Eevee Next" references mean the same engine.
 
 ### **2.3 Security & Sandboxing (Critical)**
 
-Because .mo.blend files will be downloaded from a public Git registry, executing arbitrary Python within them is a massive security risk.
+Because .mo.blend files will be downloaded from the official template library (powered by the public `moblend-registry` Git repo), executing arbitrary Python within them is a massive security risk.
 
 * **Auto-Execution:** The bootstrapper must ensure bpy.context.preferences.filepaths.use\_scripts\_auto\_execute \= False.  
-* **Reliance on Geometry Nodes:** All template logic must be constrained to Geometry Nodes and Material Nodes. Templates containing Python driver scripts or custom UI scripts must be rejected by the registry and the engine.
+* **Reliance on Geometry Nodes:** All template logic must be constrained to Geometry Nodes and Material Nodes. Templates containing Python driver scripts or custom UI scripts must be rejected by the library/registry CI and the engine.
 
 ## **3\. Lifecycle Management**
 

@@ -31,7 +31,7 @@ These are the native Python functions running inside the Headless Blender proces
   * *Action:* Forces an Eevee render update for the specific frame.  
   * *Returns:* Raw binary image data (JPEG or WebP).  
 * engine.list\_templates() \-\> list\[dict\]  
-  * *Action:* Returns the registry catalog by reading the cached `index.json` (see the Network Broker `GET /api/v1/templates` endpoint). This is a broker-level helper that does **not** touch `bpy`; it never downloads binaries, only catalog metadata.
+  * *Action:* Returns the catalog from the official template library (backed by `moblend-registry`) by reading the cached `index.json` (see the Network Broker `GET /api/v1/templates` endpoint). This is a broker-level helper that does **not** touch `bpy`; it never downloads binaries, only catalog metadata.
 
 ## **2\. Network Broker API (REST & WebSocket)**
 
@@ -58,7 +58,7 @@ All request and response bodies are JSON. The manifest returned by `GET /api/v1/
   * *Action:* Maps to `engine.set_slot` for each entry. `preset_id` is optional (see Internal Engine API). Times are seconds; the engine converts to frames via the project fps.  
   * *Response:* 200 OK.  
 * **GET /api/v1/templates**  
-  * *Action:* Returns the registry catalog (the broker's cached copy of the registry `index.json`). This is the **single authoritative listing** consumed by all clients (Wails gallery, OBS dropdowns) and by the `moblend_list_templates` MCP tool. The broker fetches/caches `index.json` from the configured registry URL; clients do not each re-implement registry crawling. (The Wails Go backend may still fetch `index.json` directly when streaming binaries to the local disk cache — that is an install/download concern, separate from this catalog read. See PRD 7 §5.)  
+  * *Action:* Returns the catalog from the official template library at `lib.moblend.dev` (the broker's cached copy of the `moblend-registry` `index.json`). This is the **single authoritative listing** consumed by all clients (Wails gallery, OBS dropdowns) and by the `moblend_list_templates` MCP tool. The broker fetches/caches `index.json` from the configured library/registry URL; clients do not each re-implement crawling. (The Wails Go backend may still fetch artifacts directly when streaming binaries to the local disk cache — that is an install/download concern, separate from this catalog read. See PRD 7 §5.)  
   * *Returns:* 200 OK with the flattened catalog array.  
 * **POST /api/v1/render/export**  
   * *Payload:* { "format": "webm", "transparent": true, "fps": 60, "resolution": \[1920, 1080\] }  
@@ -108,7 +108,7 @@ These tools are exposed to Sentinel/LLMs to allow autonomous video generation an
 
 ### **Tool: moblend\_list\_templates**
 
-* **Description:** Lists the templates available in the registry so the agent can choose one before inspecting it. Backed by `GET /api/v1/templates` (the broker's cached `index.json`); returns catalog metadata only — no binaries are downloaded.  
+* **Description:** Lists the templates available in the official library (`lib.moblend.dev`) so the agent can choose one before inspecting it. Backed by `GET /api/v1/templates` (the broker's cached `index.json` from `moblend-registry`); returns catalog metadata only — no binaries are downloaded.  
 * **Parameters:**  
   * category (string, optional): Filter by registry category (e.g. `"lower-thirds"`, `"alerts"`, `"transitions"`).  
   * query (string, optional): Free-text match against template name/description/tags.  
@@ -118,7 +118,7 @@ These tools are exposed to Sentinel/LLMs to allow autonomous video generation an
 
 * **Description:** Reads a .mo.blend template file and returns its manifest, explaining what parameters can be altered.  
 * **Parameters:**  
-  * template\_name (string, required): The name of the template in the registry.
+  * template\_name (string, required): The name (or id) of the template in the official library.
 
 ### **Tool: moblend\_apply\_parameters**
 

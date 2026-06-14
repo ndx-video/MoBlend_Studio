@@ -14,7 +14,9 @@ Mo.Blend is a **Python + Go monorepo** that wraps headless Blender as a parametr
 | OBS client | Static HTML/JS in CEF | 5 |
 | Sentinel client | MCP chat + canvas | 6 |
 
-**External repos:** `moblend-registry` (PRD 7), `MoBlend_TemplateInspector` (PRD 8).
+**External repos:** `moblend-registry` (PRD 7, powers the official template library), `MoBlend_TemplateInspector` (PRD 8).
+
+**Public sites (pre-flight):** `moblend.dev` (news, info, documentation); `lib.moblend.dev` (official template library / registry public face).
 
 ## Platforms
 

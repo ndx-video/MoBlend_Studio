@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://moblend.dev/schemas/manifest-v1.schema.json",
   "title": "Mo.Blend Template Manifest",
-  "description": "Canonical schema for the JSON manifest embedded in a .mo.blend template (bpy.context.scene['moblend_manifest']) and extracted alongside the binary in the registry as <name>.manifest.json. This is the single source of truth for the manifest contract shared by the engine (PRD 2), the broker (PRD 3), all UI clients (PRD 4/5/6), and the registry CI (PRD 7).",
+  "description": "Canonical schema for the JSON manifest embedded in a .mo.blend template (bpy.context.scene['moblend_manifest']) and extracted alongside the binary in the registry as <name>.manifest.json. This is the single source of truth for the manifest contract shared by the engine (PRD 2), the broker (PRD 3), all UI clients (PRD 4/5/6), and the registry CI (PRD 7). The schema is published at https://moblend.dev/schemas/manifest-v1.schema.json (and referenced by the official template library at lib.moblend.dev).",
   "type": "object",
   "required": ["version", "template_id", "parameters"],
   "additionalProperties": false,
