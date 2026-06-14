@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository.
 
 ## Project summary
 
-Mo.Blend is a **Python + Go monorepo** that wraps headless Blender as a parametric motion-graphics engine. Users edit `.mo.blend` templates through simple controls—not node graphs. See [specs/Mo.Blend System PRDs.md](specs/Mo.Blend%20System%20PRDs.md) for the full product picture.
+Mo.Blend is a **Python + Go monorepo** that wraps headless Blender as a parametric motion-graphics engine. Users edit `.mo.blend` templates through simple controls—not node graphs. See [specs/README.md](specs/README.md) for the full product picture.
 
 | Layer | Tech | PRD |
 |-------|------|-----|
@@ -42,7 +42,7 @@ ROADMAP.md       # Milestone order (M0–M6)
 ## Architecture rules (do not violate)
 
 1. **Single broker port:** REST, WebSocket viewport, and MCP share `127.0.0.1:8000` (FastAPI/uvicorn).
-2. **Viewport = binary WebSocket only (v1):** `WS /api/v1/viewport/stream`. Wire format in [PRD 3 §3.2](specs/PRD%203%20-%20MCP%20&%20API%20Server%20(Expanded).md). **No gRPC for browser/Wails/OBS/Sentinel clients.**
+2. **Viewport = binary WebSocket only (v1):** `WS /api/v1/viewport/stream`. Wire format in [PRD 3 §3.2](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md). **No gRPC for browser/Wails/OBS/Sentinel clients.**
 3. **Wails frontend connects directly to the broker** for HTTP and WebSocket. Do **not** stream viewport frames through Go bindings (base64 overhead).
 4. **Go may spawn/supervise Blender** but must **never** parse `.mo.blend` or render frames locally—all bpy work goes through the broker.
 5. **Blender bpy is single-threaded:** network handlers enqueue to `queue.Queue`; `bpy.app.timers` executes on the main thread.
@@ -57,9 +57,9 @@ ROADMAP.md       # Milestone order (M0–M6)
 | What was already done | [.progress/](.progress/) (latest index per milestone) |
 | Progress log rules | [.progress/README.md](.progress/README.md) |
 | API contracts | [specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md) |
-| Viewport protocol | [PRD 3 §3.2](specs/PRD%203%20-%20MCP%20&%20API%20Server%20(Expanded).md) |
-| Desktop shell | [PRD 4](specs/PRD%204%20-%20Wails%20Desktop%20UI.md) |
-| Engine / bpy | [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](specs/PRD%202%20-%20Mo.Blend%20Python%20Engine.md) |
+| Viewport protocol | [PRD 3 §3.2](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md) |
+| Desktop shell | [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) |
+| Engine / bpy | [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](specs/PRD%202%20-%20Platform%20(Mo.Blend%20Python%20Engine).md) |
 
 ## Implementation conventions
 

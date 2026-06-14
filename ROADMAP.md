@@ -14,7 +14,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** Monorepo layout, dev tooling, empty Wails shell, engine entrypoint stub.
 
-**PRD refs:** All (spec alignment); [PRD 4 — Wails Desktop UI](specs/PRD%204%20-%20Wails%20Desktop%20UI.md) (monorepo section)
+**PRD refs:** All (spec alignment); [PRD 4 — Studio (Wails Desktop UI)](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) (monorepo section)
 
 **Done when:**
 - Directory tree exists: `engine/`, `desktop/`, `clients/obs/`, `clients/sentinel/`, `scripts/`
@@ -29,7 +29,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** Headless Blender boots, loads a `.mo.blend`, mutates one manifest parameter, saves.
 
-**PRD refs:** [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](specs/PRD%202%20-%20Mo.Blend%20Python%20Engine.md)
+**PRD refs:** [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](specs/PRD%202%20-%20Platform%20(Mo.Blend%20Python%20Engine).md)
 
 **Done when:**
 - CLI invocation: `blender --background --factory-startup --python ...` loads a test template
@@ -45,7 +45,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** REST control plane + binary WebSocket viewport stream on `ws://127.0.0.1:8000/api/v1/viewport/stream`.
 
-**PRD refs:** [PRD 3](specs/PRD%203%20-%20MCP%20&%20API%20Server%20(Expanded).md) §3.2, [API & Function Spec](specs/Mo.Blend%20API%20&%20Function%20Spec.md)
+**PRD refs:** [PRD 3](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md) §3.2, [API & Function Spec](specs/Mo.Blend%20API%20&%20Function%20Spec.md)
 
 **Done when:**
 - `GET /api/v1/manifest`, `PATCH /api/v1/parameters`, `POST /api/v1/project/load` respond correctly
@@ -61,7 +61,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** Mo.Blend Studio end-to-end: Suite Manager spawns engine, live canvas, manifest form, slot timeline.
 
-**PRD refs:** [PRD 4](specs/PRD%204%20-%20Wails%20Desktop%20UI.md)
+**PRD refs:** [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md)
 
 **Done when:**
 - Go backend spawns/supervises headless Blender+engine on app start; kills on exit
@@ -92,7 +92,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** OBS browser dock: pick template, quick edit, render transparent `.webm`, inject into scene.
 
-**PRD refs:** [PRD 5](specs/PRD%205%20-%20OBS%20Extension%20Panel%20(Expanded).md)
+**PRD refs:** [PRD 5](specs/PRD%205%20-%20OBS%20Extension%20Panel.md)
 
 **Done when:**
 - Static panel under `clients/obs/` loads in OBS Custom Browser Dock
@@ -126,7 +126,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** Blender addon for template authors in `MoBlend_TemplateInspector`.
 
-**PRD refs:** [System PRDs — PRD 8 summary](specs/Mo.Blend%20System%20PRDs.md)
+**PRD refs:** [specs/README — PRD 8 summary](specs/README.md)
 
 **Done when (in that repo):** Manifest validator/generator, UX sandbox, publish prep `.zip`
 

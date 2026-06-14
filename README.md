@@ -36,7 +36,7 @@ Live preview uses a **binary WebSocket** on the FastAPI broker—not gRPC:
 ws://127.0.0.1:8000/api/v1/viewport/stream
 ```
 
-Wails, OBS, and Sentinel clients connect directly from the browser/webview. Wire format: [PRD 3 §3.2](specs/PRD%203%20-%20MCP%20&%20API%20Server%20(Expanded).md). gRPC is reserved for a future Kubernetes worker-to-worker path only.
+Wails, OBS, and Sentinel clients connect directly from the browser/webview. Wire format: [PRD 3 §3.2](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md). gRPC is reserved for a future Kubernetes worker-to-worker path only.
 
 ## External repositories
 
@@ -50,7 +50,7 @@ Wails, OBS, and Sentinel clients connect directly from the browser/webview. Wire
 - **[ROADMAP.md](ROADMAP.md)** — Build order and exit criteria (start here for implementation)
 - **[AGENTS.md](AGENTS.md)** — Guide for AI coding agents (includes mandatory progress rules)
 - **[.progress/README.md](.progress/README.md)** — Append-only progress log specification
-- **[specs/Mo.Blend System PRDs.md](specs/Mo.Blend%20System%20PRDs.md)** — Master overview + repository map
+- **[specs/README.md](specs/README.md)** — Master overview, PRD index, glossary + repository map
 - **[specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md)** — REST, WebSocket, and MCP contracts
 
 ## PRD index
@@ -58,9 +58,9 @@ Wails, OBS, and Sentinel clients connect directly from the browser/webview. Wire
 | PRD | Document | Location |
 |-----|----------|----------|
 | 1 | Blender Headless Base Compute | `specs/` |
-| 2 | Mo.Blend Python Engine | `specs/` |
-| 3 | MCP & API Server | `specs/` |
-| 4 | Wails Desktop UI (Mo.Blend Studio) | `specs/` |
+| 2 | Platform (Mo.Blend Python Engine) | `specs/` |
+| 3 | Broker (MCP & API Server) | `specs/` |
+| 4 | Studio (Wails Desktop UI) | `specs/` |
 | 5 | OBS Extension Panel | `clients/obs/` (future) |
 | 6 | Sentinel Kit UI | `clients/sentinel/` (future) |
 | 7 | Template Repository | `moblend-registry` repo |
