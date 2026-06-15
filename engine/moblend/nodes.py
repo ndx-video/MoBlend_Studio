@@ -168,3 +168,101 @@ def flag_depsgraph_update() -> None:
     except Exception:
         # In some headless contexts this may be a no-op; not fatal for M1.
         pass
+
+
+# -------------------------------------------------------------------
+# Asset ingestion helpers (M3) — images, video (as image seq or movie), fonts
+# These are called by engine.ingest_asset after the Go sandbox has provided
+# a local absolute path. Hash dedup + reuse of existing bpy data blocks.
+# -------------------------------------------------------------------
+
+import hashlib
+import os
+import shutil
+import tempfile
+from pathlib import Path
+
+
+def _asset_cache_dir() -> Path:
+    """Ephemeral cache under OS temp (wiped on reboot/session end)."""
+    base = Path(tempfile.gettempdir()) / "moblend_assets"
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def _sha256_file(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _guess_ext(path: str, default: str = ".bin") -> str:
+    ext = Path(path).suffix.lower()
+    return ext if ext else default
+
+
+def load_or_reuse_image(source_path: str) -> Any | None:
+    """Copy source to hashed cache (if needed) and return a bpy.data.images datablock.
+
+    Reuses existing block by hash-derived name to avoid project bloat.
+    Supports still images and movie clips (Blender will treat video as movie texture).
+    """
+    if not source_path or not os.path.isfile(source_path):
+        return None
+    try:
+        digest = _sha256_file(source_path)
+        ext = _guess_ext(source_path, ".png")
+        cache_name = f"moblend_{digest[:16]}{ext}"
+        cache_path = _asset_cache_dir() / cache_name
+
+        if not cache_path.exists():
+            shutil.copy2(source_path, cache_path)
+
+        # Reuse or load (check_existing helps but we also key by our hashed name)
+        img = bpy.data.images.get(cache_name)
+        if img is None:
+            img = bpy.data.images.load(str(cache_path), check_existing=True)
+            img.name = cache_name  # stable for re-use across loads if needed
+        # For video assets, caller may want to set use_auto_refresh / frame_duration
+        # but that is template-specific after the socket is wired; we just deliver the block.
+        return img
+    except Exception:
+        return None
+
+
+def load_or_reuse_font(source_path: str) -> Any | None:
+    """Load .ttf/.otf into bpy.data.fonts with hash-based dedup name."""
+    if not source_path or not os.path.isfile(source_path):
+        return None
+    try:
+        digest = _sha256_file(source_path)
+        ext = _guess_ext(source_path, ".ttf")
+        cache_name = f"moblend_font_{digest[:16]}{ext}"
+        cache_path = _asset_cache_dir() / cache_name
+
+        if not cache_path.exists():
+            shutil.copy2(source_path, cache_path)
+
+        font = bpy.data.fonts.get(cache_name)
+        if font is None:
+            font = bpy.data.fonts.load(str(cache_path), check_existing=True)
+            font.name = cache_name
+        return font
+    except Exception:
+        return None
+
+
+def apply_asset_to_socket(item: Any, ptype: str, datablock: Any) -> None:
+    """Assign an Image or VectorFont datablock to the interface socket's default_value."""
+    if item is None or datablock is None:
+        return
+    try:
+        item.default_value = datablock
+    except Exception:
+        # Some socket types expect the ID directly; fall back silently for MVP
+        try:
+            item.default_value = datablock
+        except Exception:
+            pass

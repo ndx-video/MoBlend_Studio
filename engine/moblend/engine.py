@@ -12,6 +12,9 @@ action queues, and the broker live in server.py (M2+).
 from __future__ import annotations
 
 import copy
+import tempfile
+import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +33,14 @@ _dirty: bool = False
 
 
 _preview_engine_ready = False
+
+# M3 state (slots + export jobs). Slots are mirrored into the manifest on update
+# so that the UI and GET /manifest stay in sync. Export jobs are lightweight
+# status objects for the 202 + poll contract (real frame assembly / encoding is
+# out of scope for M3 MVP; we provide a job_id and a result_path convention).
+_current_slots: list[dict[str, Any]] = []
+_export_jobs: dict[str, dict[str, Any]] = {}  # job_id -> status dict (thread-safe enough via GIL + simple sets)
+_job_id_counter = 0
 
 
 def get_current_manifest() -> dict[str, Any] | None:
@@ -254,6 +265,9 @@ def render_frame(
         # Frame
         sc.frame_set(int(frame_number))
 
+        # Ensure GN / parameter mutations are visible to EEVEE before write_still
+        nodes.flag_depsgraph_update()
+
         # Format selection per PRD 3 / spec
         fmt = (img_format or "JPEG").upper()
         if fmt == "WEBP":
@@ -297,3 +311,187 @@ def render_frame(
                     os.unlink(tmp_path)
             except Exception:
                 pass
+
+
+# -------------------------------------------------------------------
+# M3: Slot timeline, asset ingestion, export job skeleton (202 + poll MVP)
+# These are intentionally lightweight. The authored .mo.blend Geometry Nodes
+# contain the actual time-controller math and image/font wiring. We only
+# mutate bounds/preset ids and deliver datablocks.
+# -------------------------------------------------------------------
+
+import threading
+import uuid
+
+
+def get_current_slots() -> list[dict[str, Any]]:
+    """Return a copy of the current slot bounds (updated via PATCH /slots or set_slot)."""
+    return list(_current_slots)
+
+
+def set_slot(index: int, start_time: float, end_time: float, preset_id: str | None = None) -> bool:
+    """Update (or insert) a slot's time bounds and optional preset.
+
+    Mirrors the change into the in-memory manifest so GET /manifest and
+    future loads see the new values. The real animation stretching happens
+    inside the template's master time-driving Geometry Nodes (see PRD 2 §4).
+    """
+    global _current_slots, _dirty
+
+    if _current_manifest is None:
+        raise RuntimeError("No template loaded. Call load_template(...) first.")
+
+    # Normalize
+    idx = int(index)
+    st = float(start_time)
+    et = float(end_time)
+    if et < st:
+        et = st
+
+    # Find or create the slot entry in our runtime list
+    found = False
+    for s in _current_slots:
+        if s.get("index") == idx:
+            s["start_time"] = st
+            s["end_time"] = et
+            if preset_id is not None:
+                s["preset_id"] = str(preset_id)
+            found = True
+            break
+    if not found:
+        entry: dict[str, Any] = {"index": idx, "start_time": st, "end_time": et}
+        if preset_id is not None:
+            entry["preset_id"] = str(preset_id)
+        _current_slots.append(entry)
+        # Keep sorted by index for UI convenience
+        _current_slots.sort(key=lambda x: x.get("index", 0))
+
+    # Sync to manifest (authoritative for clients) and persist to scene
+    manifest.sync_slots(_current_manifest, _current_slots)
+    manifest.write_manifest_to_scene(_current_manifest)
+
+    _dirty = True
+    return True
+
+
+def ingest_asset(param_id: str, source_path: str) -> bool:
+    """Ingest a local asset (image / video / font) for an asset-type parameter.
+
+    source_path is an absolute filesystem path supplied by the Go sandbox
+    (after drag-drop or file picker). We hash, cache under TEMP/moblend_assets,
+    load/reuse a bpy datablock, wire it to the socket declared in the manifest,
+    and update the manifest default so the UI can reflect the choice.
+    """
+    global _dirty
+
+    if _current_manifest is None:
+        raise RuntimeError("No template loaded. Call load_template(...) first.")
+
+    param = manifest.find_parameter(_current_manifest, param_id)
+    if param is None:
+        return False
+
+    ptype = param.get("type")
+    if ptype not in ("image", "video", "font"):
+        # Allow the call but do nothing for non-asset types (defensive)
+        return False
+
+    # Resolve target the same way scalars do
+    tree = nodes.find_target_node_tree(param["node_target"])
+    if tree is None:
+        return False
+
+    item = nodes.resolve_input_socket_by_identifier(tree, param["socket_identifier"])
+    if item is None:
+        return False
+
+    datablock = None
+    if ptype in ("image", "video"):
+        datablock = nodes.load_or_reuse_image(source_path)
+    else:
+        datablock = nodes.load_or_reuse_font(source_path)
+
+    if datablock is None:
+        return False
+
+    nodes.apply_asset_to_socket(item, ptype, datablock)
+    nodes.flag_depsgraph_update()
+
+    # Record a client-visible reference (the original path is fine for MVP;
+    # a future UI can display basename or a thumb).
+    manifest.sync_parameter_default(_current_manifest, param_id, ptype, source_path)
+    manifest.write_manifest_to_scene(_current_manifest)
+
+    _dirty = True
+    return True
+
+
+def _next_job_id() -> str:
+    global _job_id_counter
+    _job_id_counter += 1
+    return f"job_{_job_id_counter:04d}_{uuid.uuid4().hex[:8]}"
+
+
+def start_export_job(spec: dict[str, Any] | None = None) -> str:
+    """Kick off an async export job. Returns job_id immediately (202 contract).
+
+    MVP implementation: lightweight status machine in a thread. No actual
+    multi-frame video mux is performed (that belongs to later milestones or
+    a full Blender render animation pass by the user). We advance fake
+    progress and surface a conventional result_path so clients (Studio, OBS)
+    can poll and consume something.
+
+    Real templates + the existing render_frame path already prove the frame
+    production side; this unblocks the UI trigger + poll flow.
+    """
+    global _export_jobs
+
+    job_id = _next_job_id()
+    spec = spec or {}
+
+    job = {
+        "job_id": job_id,
+        "status": "queued",
+        "progress": 0.0,
+        "eta_seconds": None,
+        "result_path": None,
+        "error": None,
+        "spec": dict(spec),
+        "created": time.time(),
+    }
+    _export_jobs[job_id] = job
+
+    def _runner() -> None:
+        # Simulate work without touching bpy from this thread.
+        # A production version would enqueue per-frame render tasks on the
+        # main action queue and assemble frames here when complete.
+        try:
+            _export_jobs[job_id]["status"] = "running"
+            steps = 5
+            for i in range(1, steps + 1):
+                time.sleep(0.15)  # tiny artificial delay so poll can observe progress
+                prog = i / steps
+                _export_jobs[job_id]["progress"] = round(prog, 2)
+            # "Finish" — point at the current project or a conventional export location
+            # (MVP stub — real video mux / frame assembly happens in later milestones)
+            if _current_path:
+                base = _current_path
+            else:
+                base = str(Path(tempfile.gettempdir()) / "moblend_export_stub")
+            out = f"{base}.export.mvp"
+            _export_jobs[job_id]["result_path"] = out
+            _export_jobs[job_id]["status"] = "done"
+            _export_jobs[job_id]["progress"] = 1.0
+        except Exception as ex:  # pragma: no cover
+            _export_jobs[job_id]["status"] = "error"
+            _export_jobs[job_id]["error"] = str(ex)
+
+    t = threading.Thread(target=_runner, name=f"moblend-export-{job_id}", daemon=True)
+    t.start()
+    return job_id
+
+
+def get_export_status(job_id: str) -> dict[str, Any] | None:
+    """Return a copy of the job status for polling, or None if unknown."""
+    j = _export_jobs.get(job_id)
+    return dict(j) if j else None

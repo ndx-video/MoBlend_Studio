@@ -13,8 +13,8 @@ import bpy  # type: ignore[import-not-found]
 import json
 
 
-# Canonical scalar + asset types from the schema (image/video/font are
-# handled via ingest_asset later; M1 focuses on the ones set_parameter mutates).
+# Canonical scalar + asset types from the schema. image/video/font are
+# routed through ingest_asset (M3) and still validated here for manifest round-trips.
 ALLOWED_PARAM_TYPES: frozenset[str] = frozenset(
     {
         "string",
@@ -24,6 +24,9 @@ ALLOWED_PARAM_TYPES: frozenset[str] = frozenset(
         "bool",
         "color_rgba",
         "enum",
+        "image",
+        "video",
+        "font",
     }
 )
 
@@ -168,3 +171,14 @@ def sync_parameter_default(
 def write_manifest_to_scene(manifest: dict[str, Any]) -> None:
     """Persist the manifest dict to scene['moblend_manifest'] as a JSON string."""
     bpy.context.scene["moblend_manifest"] = json.dumps(manifest)
+
+
+def sync_slots(manifest: dict[str, Any], slots: list[dict[str, Any]]) -> None:
+    """Replace the top-level 'slots' array in the in-memory manifest.
+
+    Called by set_slot after successful update so that GET /manifest and
+    subsequent loads reflect the new time bounds / preset choices.
+    Slots are optional in the schema; this is a no-op if manifest lacks support.
+    """
+    if isinstance(slots, list):
+        manifest["slots"] = slots

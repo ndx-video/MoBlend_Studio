@@ -172,6 +172,16 @@ def _validate_parameter_update(manifest: dict[str, Any], upd: ParameterUpdate) -
     if ptype == "enum" and not (isinstance(upd.value, (str, int))):
         raise _error("validation_failed", "enum expects string label or int index", 422, {"id": upd.id})
 
+    # Asset params (image/video/font) carry a local filesystem path (or file:// URI) from the
+    # Go sandbox. The broker will dispatch to ingest_asset rather than set_parameter.
+    if ptype in ("image", "video", "font") and not isinstance(upd.value, (str,)):
+        raise _error(
+            "validation_failed",
+            f"{ptype} expects a local path string (sandbox file), got {type(upd.value)}",
+            422,
+            {"id": upd.id},
+        )
+
 
 # -------------------------------------------------------------------
 # Action execution (runs on main Blender thread via timer)
@@ -202,6 +212,20 @@ def _execute_task(task: BrokerTask) -> None:
             fmt = task.args.get("format", "JPEG")
             data = engine.render_frame(fn, width=w, height=h, img_format=fmt)
             task.result = data
+        elif task.op == "set_slot":
+            idx = int(task.args["index"])
+            st = float(task.args["start_time"])
+            et = float(task.args["end_time"])
+            pid = task.args.get("preset_id")
+            ok = engine.set_slot(idx, st, et, pid)
+            task.result = {"ok": bool(ok)}
+        elif task.op == "ingest_asset":
+            pid = task.args["id"]
+            src = task.args["source_path"]
+            ok = engine.ingest_asset(pid, src)
+            if not ok:
+                raise RuntimeError(f"ingest_asset({pid}) failed (unknown param, bad path, or unsupported type)")
+            task.result = {"ok": True}
         else:
             raise RuntimeError(f"Unknown op: {task.op}")
     except Exception as ex:  # capture everything for the waiter
@@ -253,15 +277,18 @@ def _is_stale_and_should_drop(frame_number: int, drop_flag: bool) -> bool:
 def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
     app = FastAPI(title="Mo.Blend Broker", version="0.2.0")
 
-    # CORS — strict per PRD 3 §4. Only local UI origins.
+    # CORS — local UI origins only (PRD 3 §4). Wails WebView2 uses https://wails.localhost.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
             "http://wails.localhost",
+            "https://wails.localhost",
             "http://localhost",
+            "https://localhost",
             "http://127.0.0.1",
+            "https://127.0.0.1",
         ],
-        allow_origin_regex=r"http://(localhost|127\.0\.0\.1)(:\d+)?",
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|wails\.localhost)(:\d+)?",
         allow_credentials=False,
         allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
         allow_headers=["*"],
@@ -319,17 +346,84 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
 
         results: list[dict[str, Any]] = []
         for upd in body.updates:
-            task = BrokerTask(op="set_parameter", args={"id": upd.id, "value": upd.value})
+            p = None
+            if hasattr(engine, "manifest"):
+                try:
+                    p = engine.manifest.find_parameter(manifest, upd.id)
+                except Exception:
+                    p = None
+            if p is None:
+                from .manifest import find_parameter
+                p = find_parameter(manifest, upd.id)
+            is_asset = p is not None and p.get("type") in ("image", "video", "font")
+
+            op = "ingest_asset" if is_asset else "set_parameter"
+            args = {"id": upd.id, "source_path": upd.value} if is_asset else {"id": upd.id, "value": upd.value}
+
+            task = BrokerTask(op=op, args=args)
+            try:
+                action_q.put(task, timeout=0.05)
+            except queue.Full:
+                raise _error("queue_full", "Action queue is full (backpressure)", 429)
+            task.event.wait(timeout=30.0 if is_asset else 10.0)
+            if task.exc:
+                op_name = "ingest_asset" if is_asset else "set_parameter"
+                raise _error("engine_error", f"{op_name}({upd.id}) failed: {task.exc}", 500)
+            results.append(task.result)
+
+        return {"status": "ok", "applied": len(results)}
+
+    @app.patch("/api/v1/slots")
+    def patch_slots(body: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Accept {"slots": [ {"index": 0, "start_time": 0.0, "end_time": 2.5, "preset_id": "fade_in"? }, ... ]}"""
+        if body is None or not isinstance(body, dict):
+            body = {}
+        slots = body.get("slots")
+        if not isinstance(slots, list):
+            raise _error("validation_failed", "slots must be a list", 422)
+
+        results: list[dict[str, Any]] = []
+        for s in slots:
+            if not isinstance(s, dict) or "index" not in s or "start_time" not in s or "end_time" not in s:
+                raise _error("validation_failed", "each slot requires index, start_time, end_time", 422)
+            task = BrokerTask(
+                op="set_slot",
+                args={
+                    "index": s["index"],
+                    "start_time": s["start_time"],
+                    "end_time": s["end_time"],
+                    "preset_id": s.get("preset_id"),
+                },
+            )
             try:
                 action_q.put(task, timeout=0.05)
             except queue.Full:
                 raise _error("queue_full", "Action queue is full (backpressure)", 429)
             task.event.wait(timeout=10.0)
             if task.exc:
-                raise _error("engine_error", f"set_parameter({upd.id}) failed: {task.exc}", 500)
+                raise _error("engine_error", f"set_slot failed: {task.exc}", 500)
             results.append(task.result)
 
         return {"status": "ok", "applied": len(results)}
+
+    @app.post("/api/v1/render/export")
+    def render_export(body: dict[str, Any] | None = None) -> dict[str, Any]:
+        """M3 MVP: immediately returns 202 + job_id. Poll status for progress/result_path."""
+        spec = body or {}
+        # We do not enqueue the whole export (it may be long); engine.start_export_job spawns
+        # a status thread. Real per-frame work can be added later by enqueuing render tasks.
+        try:
+            job_id = engine.start_export_job(spec)
+        except Exception as ex:
+            raise _error("engine_error", f"Failed to start export: {ex}", 500)
+        return {"job_id": job_id, "status": "queued"}
+
+    @app.get("/api/v1/render/status/{job_id}")
+    def render_status(job_id: str) -> dict[str, Any]:
+        st = engine.get_export_status(job_id)
+        if st is None:
+            raise _error("not_found", f"Unknown job_id {job_id}", 404, {"job_id": job_id})
+        return st
 
     @app.get("/api/v1/templates")
     def list_templates() -> list[dict[str, Any]]:
