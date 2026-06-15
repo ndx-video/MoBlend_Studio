@@ -1,26 +1,47 @@
-html {
-    background-color: rgba(27, 38, 54, 1);
-    text-align: center;
-    color: white;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base for Wails webview + Stitch theme overrides */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-body {
-    margin: 0;
-    color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+/* Custom component styles to match Stitch prose exactly (in addition to Tailwind utilities) */
+.panel {
+  @apply bg-surface-container border border-outline-variant rounded-lg;
 }
 
-@font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+.section-label {
+  @apply text-[10px] font-bold tracking-[0.05em] uppercase text-on-surface-variant mb-1;
 }
 
-#app {
-    height: 100vh;
-    text-align: center;
+.list-item {
+  @apply h-8 flex items-center px-3 text-sm cursor-pointer hover:bg-surface-container-high;
+}
+
+.list-item.selected {
+  @apply bg-primary/10 border-l-2 border-primary-container pl-[10px];
+}
+
+.btn-primary {
+  @apply bg-primary-container text-on-primary px-4 py-2 rounded text-sm font-medium hover:brightness-105 transition;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-on-surface border border-outline-variant px-3 py-1.5 rounded text-sm hover:bg-white/5;
+}
+
+.timeline {
+  @apply bg-surface-container-low border-t border-outline-variant h-[120px] relative overflow-hidden;
+}
+
+.timeline-block {
+  @apply absolute top-8 h-12 bg-primary-container border border-primary rounded flex items-center px-2 text-xs text-white cursor-ew-resize;
 }
