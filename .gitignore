@@ -39,6 +39,8 @@ htmlcov/
 node_modules/
 desktop/frontend/dist/
 desktop/frontend/node_modules/
+desktop/frontend/playwright-report/
+desktop/frontend/test-results/
 *.tsbuildinfo
 .npm/
 
