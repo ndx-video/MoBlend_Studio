@@ -1,0 +1,302 @@
+/* Mo.Blend Studio design tokens (M3)
+   Extracted once from specs/stitch/*/DESIGN.md (all screens share the same frontmatter).
+   Used by AppShell + feature screens. Prefer these tokens over hard-coded hex.
+*/
+
+:root {
+  /* Surfaces (tiered dark) */
+  --surface: #121317;
+  --surface-dim: #121317;
+  --surface-bright: #38393d;
+  --surface-container-lowest: #0d0e12;
+  --surface-container-low: #1a1b1f;
+  --surface-container: #1e1f24;
+  --surface-container-high: #292a2e;
+  --surface-container-highest: #343439;
+
+  /* On surfaces */
+  --on-surface: #e3e2e7;
+  --on-surface-variant: #c8c4d7;
+  --inverse-surface: #e3e2e7;
+  --inverse-on-surface: #2f3034;
+
+  /* Accents (indigo-violet pro feel) */
+  --primary: #c6bfff;
+  --on-primary: #2900a0;
+  --primary-container: #6c5ce7;
+  --on-primary-container: #faf6ff;
+  --inverse-primary: #5847d2;
+
+  --secondary: #aec6ff;
+  --on-secondary: #002e6a;
+
+  --tertiary: #c6c6ce;
+
+  /* Semantic */
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --outline: #928ea0;
+  --outline-variant: #474554;
+
+  /* Typography (Inter primary, JetBrains Mono for data) */
+  --font-sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Spacing (4px base unit) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+
+  /* Roundedness */
+  --radius-sm: 0.25rem;
+  --radius: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Borders / elevation cues */
+  --panel-border: 1px solid #2d2e35;
+}
+
+/* Global reset + pro-tool density for the Wails webview */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Minimal card / panel shell used across screens */
+.panel {
+  background: var(--surface-container);
+  border: var(--panel-border);
+  border-radius: var(--radius);
+}
+
+.panel-header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: var(--panel-border);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+/* Navigation rail (left sidebar, 72px wide as per designs) */
+.nav-rail {
+  width: 72px;
+  background: var(--surface-container-low);
+  border-right: var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-md);
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.nav-item {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-surface-variant);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+.nav-item.active,
+.nav-item:hover {
+  color: var(--primary);
+  background: rgba(198, 191, 255, 0.08);
+}
+
+/* Buttons per Stitch Components */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-container), #4c8dff);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--on-surface);
+  border: 1px solid var(--outline-variant);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--on-surface-variant);
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--on-surface);
+}
+
+/* Inputs per Stitch */
+.input, .input[type="text"], .input[type="number"], select, textarea {
+  background: #2d2e35; /* Surface-high approx */
+  border: 1px solid transparent;
+  color: var(--on-surface);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.input:focus, .input[type="text"]:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-container);
+}
+
+/* Lists (32px row height, tight) */
+.list-item {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.list-item:hover {
+  background: rgba(255,255,255,0.03);
+}
+.list-item.selected {
+  background: rgba(108, 92, 231, 0.1);
+  border-left: 2px solid var(--primary-container);
+  padding-left: 10px;
+}
+
+/* Timeline */
+.timeline {
+  background: var(--surface-container-low);
+  border-top: var(--panel-border);
+  height: 120px;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+.timeline-ruler {
+  height: 24px;
+  background: var(--surface-container);
+  border-bottom: var(--panel-border);
+  position: relative;
+}
+.timeline-block {
+  position: absolute;
+  top: 32px;
+  height: 48px;
+  background: var(--primary-container);
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 11px;
+  color: white;
+  cursor: ew-resize;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.timeline-block:hover {
+  filter: brightness(1.1);
+}
+.timeline-keyframe {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #a0a0a5;
+  transform: rotate(45deg);
+  top: 52px;
+  cursor: pointer;
+}
+.timeline-keyframe.selected {
+  background: var(--primary);
+}
+
+/* Top app header / toolbar */
+.app-header {
+  height: 36px;
+  background: var(--surface-container-low);
+  border-bottom: var(--panel-border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  flex-shrink: 0;
+}
+
+/* Scrollbars per spec */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2d2e35;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3b40;
+}
+
+/* General pro density */
+.section-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  margin-bottom: 6px;
+}
