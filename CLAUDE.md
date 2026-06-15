@@ -1,5 +1,5 @@
-# Claude Code — MoBlend_Studio
+@AGENTS.md
 
-Read **[AGENTS.md](AGENTS.md)** for all project context, architecture rules, platform priorities, and milestone order.
+## Claude Code
 
-That file is the single source of truth for AI agents in this repository.
+Path-scoped rules live in `.claude/rules/`. Multi-step workflows live in `.claude/skills/`. Nested `AGENTS.md` files load on demand when working in matching directories.
