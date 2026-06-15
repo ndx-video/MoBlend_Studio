@@ -63,7 +63,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 **Goal:** Mo.Blend Studio end-to-end: Suite Manager spawns engine, live canvas, manifest form, slot timeline.
 
-**PRD refs:** [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md)
+**PRD refs:** [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) — **implementation guide: §8–§13** (readiness matrix, Stitch → React, Go bindings); design refs in [`specs/stitch/`](specs/stitch/)
 
 **Done when:**
 - Go backend spawns/supervises headless Blender+engine on app start; kills on exit

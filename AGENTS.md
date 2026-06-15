@@ -60,14 +60,14 @@ ROADMAP.md       # Milestone order (M0–M6)
 | Progress log rules | [.progress/README.md](.progress/README.md) |
 | API contracts | [specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md) |
 | Viewport protocol | [PRD 3 §3.2](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md) |
-| Desktop shell | [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) |
+| Desktop shell | [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) §1–§7; **M3 build:** §8–§13 + [specs/stitch/README.md](specs/stitch/README.md). **On-demand for any frontend/GUI work:** read [desktop/README.md](desktop/README.md) (especially the Automated E2E Testing section). |
 | Engine / bpy | [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md), [PRD 2](specs/PRD%202%20-%20Platform%20(Mo.Blend%20Python%20Engine).md) |
 
 ## Implementation conventions
 
 - **Python:** `engine/` package; type hints; minimal dependencies; run inside Blender's bundled Python or documented venv for dev tooling only.
 - **Go:** Wails v2 patterns; `desktop/` module; use `os/exec` for Blender lifecycle on Windows first.
-- **Frontend:** React + TypeScript under `desktop/frontend/`; debounce parameter PATCH requests; drop stale WebSocket frame requests when scrubbing.
+- **Frontend:** React + TypeScript under `desktop/frontend/`; debounce parameter PATCH requests; drop stale WebSocket frame requests when scrubbing. **Mandatory:** use the Playwright E2E suite (`cd desktop/frontend && npm run test:e2e`) for all UI changes — see desktop/README.md. Do not rely on manual `wails dev` testing alone.
 - **Commits:** Only when the user asks. Do not commit secrets (`.env`, credentials).
 - **Scope:** Smallest correct diff; match existing patterns; no drive-by refactors.
 
