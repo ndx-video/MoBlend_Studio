@@ -4,6 +4,17 @@ import { DEFAULT_TEMPLATE_PATH, M1_MANIFEST } from './manifest';
 export type BrokerCall = { method: string; url: string; body?: unknown };
 
 /** In-memory broker state shared across route handlers in one page context. */
+export const MOCK_CATALOG_ENTRY = {
+  template_id: 'parametric-cube-demo',
+  name: 'Parametric Cube Demo',
+  category: 'demo',
+  description: 'Minimal parametric cube template for M4 bootstrap.',
+  version: '1.0.0',
+  preview_url: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+  manifest_url: 'https://example.test/parametric-cube-demo.manifest.json',
+  download_url: 'https://example.test/parametric-cube-demo.mo.blend',
+};
+
 export type MockBrokerState = {
   manifest: typeof M1_MANIFEST;
   health: { status: string; loaded: boolean; template_id: string; dirty: boolean };
@@ -11,6 +22,7 @@ export type MockBrokerState = {
   paramValues: Record<string, unknown>;
   slots: typeof M1_MANIFEST.slots;
   exportJobs: Map<string, { status: string; progress: number; result_path?: string }>;
+  catalog: typeof MOCK_CATALOG_ENTRY[];
 };
 
 export function createBrokerState(): MockBrokerState {
@@ -21,6 +33,7 @@ export function createBrokerState(): MockBrokerState {
     paramValues: Object.fromEntries(M1_MANIFEST.parameters.map(p => [p.id, p.default])),
     slots: structuredClone(M1_MANIFEST.slots),
     exportJobs: new Map(),
+    catalog: [structuredClone(MOCK_CATALOG_ENTRY)],
   };
 }
 
@@ -30,9 +43,11 @@ const MOCK_SANDBOX_LIST = [
   'C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_def456.ttf',
 ];
 
-export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string }) {
+export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string; installedTemplateIds?: string[] }) {
   const brokerBase = opts?.brokerBase ?? 'http://127.0.0.1:8000';
-  await page.addInitScript((base: string) => {
+  const installedIds = opts?.installedTemplateIds ?? [];
+  await page.addInitScript(({ base, installed }: { base: string; installed: string[] }) => {
+    const installedPath = (id: string) => `C:\\\\Users\\\\Test\\\\.moblend\\\\templates\\\\${id}.mo.blend`;
     const eventListeners: Record<string, Array<(...args: unknown[]) => void>> = {};
 
     (window as any).go = {
@@ -50,8 +65,19 @@ export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string 
           AddRecentProject: async (_p: string) => {},
           GetBrokerBaseURL: () => base,
           EngineHealth: async () => ({ loaded: true, template_id: 'm1-roundtrip-test', dirty: false, status: 'ok' }),
-          GetConfig: async () => ({}),
+          GetConfig: async () => ({
+            registryBaseUrl: 'https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main',
+          }),
           SetConfig: async (_cfg: unknown) => {},
+          InstallTemplate: async (id: string, _url: string, _ver: string) => installedPath(id),
+          ListInstalledTemplates: async () =>
+            installed.map(id => ({
+              TemplateID: id,
+              LocalPath: installedPath(id),
+              CatalogVersion: '1.0.0',
+            })),
+          GetInstalledTemplatePath: async (id: string) =>
+            installed.includes(id) ? [installedPath(id), true] : ['', false],
           CopyToAssetSandbox: async (paths: string[]) => {
             const p = paths[0] || '';
             if (p.toLowerCase().includes('.ttf') || p.toLowerCase().includes('font')) {
@@ -102,7 +128,7 @@ export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string 
     (window as any).__moblendEmitEvent = (eventName: string, ...data: unknown[]) => {
       runtime.EventsEmit(eventName, ...data);
     };
-  }, brokerBase);
+  }, { base: brokerBase, installed: installedIds });
 }
 
 export { MOCK_SANDBOX_PNG, MOCK_SANDBOX_LIST };
@@ -167,6 +193,12 @@ export async function mockBroker(page: Page, state?: MockBrokerState) {
       const jobId = url.split('/render/status/')[1]?.split('?')[0] ?? 'job_e2e_001';
       const st = brokerState.exportJobs.get(jobId) ?? { status: 'done', progress: 1, result_path: 'C:\\\\TEMP\\\\fake.webm' };
       return route.fulfill({ json: { job_id: jobId, ...st } });
+    }
+    if (url.includes('/templates/refresh')) {
+      return route.fulfill({ json: brokerState.catalog });
+    }
+    if (url.includes('/templates')) {
+      return route.fulfill({ json: brokerState.catalog });
     }
     return route.fulfill({ status: 200, body: '{}' });
   });
@@ -239,9 +271,12 @@ export async function mockBroker(page: Page, state?: MockBrokerState) {
   });
 }
 
-export async function setupMockedApp(page: Page, state?: MockBrokerState) {
-  const brokerState = state ?? createBrokerState();
-  await injectWailsMocks(page);
+export async function setupMockedApp(
+  page: Page,
+  opts?: { state?: MockBrokerState; installedTemplateIds?: string[] },
+) {
+  const brokerState = opts?.state ?? createBrokerState();
+  await injectWailsMocks(page, { installedTemplateIds: opts?.installedTemplateIds });
   await mockBroker(page, brokerState);
   return brokerState;
 }

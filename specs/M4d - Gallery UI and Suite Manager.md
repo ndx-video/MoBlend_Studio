@@ -1,6 +1,6 @@
 # M4d — Gallery UI and Suite Manager
 
-**Status:** Planned  
+**Status:** Implemented (see `.progress/M004d.001`)
 **Parent:** [M4 — Registry Integration](M4%20-%20Registry%20Integration.md)  
 **Roadmap:** [ROADMAP.md § M4d](../ROADMAP.md#m4d--gallery-ui-and-suite-manager)  
 **Depends on:** [M4b](M4b%20-%20Broker%20Catalog%20Cache.md), [M4c](M4c%20-%20Go%20Template%20Install.md)

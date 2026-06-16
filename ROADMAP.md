@@ -107,9 +107,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 ---
 
-## M4 — Registry Integration
+## M4 — Registry Integration ✅ Complete
 
-**Status:** In progress — sliced into **M4a → M4b → M4c → M4d** (run in order, each in its own agent session).
+**Status:** Complete — see [.progress/M004d.001.gallery-suite-manager.md](.progress/M004d.001.gallery-suite-manager.md) and sub-slice entries `M004a`–`M004c`.
 
 **Goal:** Template gallery from the official library at `lib.moblend.dev` (v1 backed by sibling repo `MoBlend_Lib` and its `index.json`); one-click install to `~/.moblend/templates/`.
 
@@ -164,7 +164,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 - `studio.db` `installed_templates` rows; version-aware skip re-download
 - `go test ./internal/store/...` passes
 
-### M4d — Gallery UI and Suite Manager
+### M4d — Gallery UI and Suite Manager ✅ Complete
+
+**Status:** Complete — see [.progress/M004d.001.gallery-suite-manager.md](.progress/M004d.001.gallery-suite-manager.md).
 
 **Spec:** [M4d — Gallery UI and Suite Manager](specs/M4d%20-%20Gallery%20UI%20and%20Suite%20Manager.md) · Skill: `/implement-m4d-gallery-ui`
 
@@ -225,7 +227,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 ## Current focus
 
-**Next slice:** [M4d — Gallery UI and Suite Manager](#m4d--gallery-ui-and-suite-manager)
+**Next slice:** [M5 — OBS Panel](#m5--obs-panel)
 
 ---
 

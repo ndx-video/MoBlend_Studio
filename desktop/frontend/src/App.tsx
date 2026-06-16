@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import AppShell from './layout/AppShell';
 import { StatusProvider, useStatus, isBrokerUp } from './layout/StatusContext';
 import { useViewportStream } from './broker/useViewportStream';
-import { getHealth, getManifest, loadProject, patchParameters, patchSlots, startExport, getExportStatus, Manifest } from './broker/client';
+import { getHealth, getManifest, loadProject, patchParameters, patchSlots, startExport, getExportStatus, getTemplates, refreshTemplates, Manifest, CatalogEntry } from './broker/client';
 import { FlowError, runStep } from './util/flow';
 import { basename, inferAssetKind, isAssetParamType, ingestAssetParam, listSandboxAssets } from './util/assets';
 import { AssetParamRow } from './components/AssetParamRow';
@@ -14,6 +14,21 @@ declare const window: Window & { go?: { main?: { App?: Record<string, unknown> }
 
 function wailsOr<T extends (...args: never[]) => unknown>(fn: T, fallback: T): T {
   return (typeof fn === 'function' ? fn : fallback) as T;
+}
+
+function goApp(): Record<string, unknown> | undefined {
+  return window?.go?.main?.App;
+}
+
+/** Wails (string, bool) bindings resolve to [value, ok] at runtime. */
+function parsePathBoolResult(result: unknown): { path: string; ok: boolean } {
+  if (Array.isArray(result) && result.length >= 2) {
+    return { path: String(result[0] ?? ''), ok: Boolean(result[1]) };
+  }
+  if (typeof result === 'string' && result) {
+    return { path: result, ok: true };
+  }
+  return { path: '', ok: false };
 }
 
 function useGoBindings() {
@@ -37,8 +52,33 @@ function useGoBindings() {
       console.log('%c[MoBlend] F12 — for DevTools use wails dev or open http://localhost:5173 in Chrome', 'color:#888');
     }),
     Greet: wailsOr(WailsApp.Greet, async (n: string) => `Hello ${n}`),
+    GetConfig: wailsOr(WailsApp.GetConfig, async () => ({} as Record<string, unknown>)),
+    InstallTemplate: async (templateID: string, downloadURL: string, catalogVersion: string) => {
+      const fn = goApp()?.InstallTemplate;
+      if (typeof fn === 'function') {
+        return (fn as (a: string, b: string, c: string) => Promise<string>)(templateID, downloadURL, catalogVersion);
+      }
+      throw new Error('InstallTemplate binding unavailable');
+    },
+    ListInstalledTemplates: async () => {
+      const fn = goApp()?.ListInstalledTemplates;
+      if (typeof fn === 'function') {
+        return fn() as Promise<Array<{ TemplateID: string; LocalPath: string; CatalogVersion: string }>>;
+      }
+      return [];
+    },
+    GetInstalledTemplatePath: async (templateID: string) => {
+      const fn = goApp()?.GetInstalledTemplatePath;
+      if (typeof fn !== 'function') {
+        return '';
+      }
+      const { path, ok } = parsePathBoolResult(await fn(templateID));
+      return ok ? path : '';
+    },
   };
 }
+
+const DEFAULT_REGISTRY_URL = 'https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main';
 
 const PARAM_DEBOUNCE_MS = 200;
 
@@ -298,10 +338,91 @@ function HomeScreen() {
   const { setStatus, ensureBroker } = useStatus();
   const [defaultPath, setDefaultPath] = useState('');
   const [loading, setLoading] = useState(false);
+  const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
+  const [installed, setInstalled] = useState<Record<string, string>>({});
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [actionId, setActionId] = useState<string | null>(null);
 
   useEffect(() => {
     go.GetDefaultTemplatePath?.().then((p: string) => setDefaultPath(p || ''));
+    void loadGallery();
   }, []);
+
+  async function loadGallery() {
+    setCatalogLoading(true);
+    setCatalogError(null);
+    try {
+      const templates = await getTemplates({ timeoutMs: 15_000 });
+      const entries = Array.isArray(templates) ? templates : [];
+      setCatalog(entries);
+      const map: Record<string, string> = {};
+      await Promise.all(
+        entries.map(async entry => {
+          const path = await go.GetInstalledTemplatePath(entry.template_id).catch(() => '');
+          if (path) map[entry.template_id] = path;
+        }),
+      );
+      setInstalled(map);
+    } catch (e: unknown) {
+      setCatalog([]);
+      setCatalogError((e as Error)?.message || 'Catalog unavailable');
+    } finally {
+      setCatalogLoading(false);
+    }
+  }
+
+  async function openInstalled(entry: CatalogEntry, localPath: string) {
+    if (loading) return;
+    setActionId(entry.template_id);
+    setLoading(true);
+    try {
+      await runStep('[open 1/3] Broker', setStatus, async () => {
+        if (!(await ensureBroker())) throw new FlowError('Broker not ready', '[open 1/3]');
+      }, { timeoutMs: 120_000 });
+      await runStep(`[open 2/3] Load ${entry.name}`, setStatus, () => loadProject(localPath), { timeoutMs: 120_000 });
+      await go.AddRecentProject(localPath);
+      setStatus('[open 3/3] Opening editor…', 'info');
+      nav('/editor');
+    } catch (e: unknown) {
+      if (!(e instanceof FlowError)) {
+        setStatus('Open failed: ' + (e as Error)?.message, 'error');
+      }
+    } finally {
+      setLoading(false);
+      setActionId(null);
+    }
+  }
+
+  async function installAndOpen(entry: CatalogEntry) {
+    if (loading) return;
+    setActionId(entry.template_id);
+    setLoading(true);
+    try {
+      await runStep('[install 1/4] Broker', setStatus, async () => {
+        if (!(await ensureBroker())) throw new FlowError('Broker not ready', '[install 1/4]');
+      }, { timeoutMs: 120_000 });
+      const localPath = await runStep(
+        `[install 2/4] Download ${entry.name}`,
+        setStatus,
+        () => go.InstallTemplate(entry.template_id, entry.download_url, entry.version),
+        { timeoutMs: 300_000 },
+      );
+      if (!localPath) throw new FlowError('Install returned empty path', '[install 2/4]');
+      await go.AddRecentProject(localPath);
+      setInstalled(prev => ({ ...prev, [entry.template_id]: localPath }));
+      await runStep(`[install 3/4] Load ${entry.name}`, setStatus, () => loadProject(localPath), { timeoutMs: 120_000 });
+      setStatus('[install 4/4] Opening editor…', 'info');
+      nav('/editor');
+    } catch (e: unknown) {
+      if (!(e instanceof FlowError)) {
+        setStatus('Install failed: ' + (e as Error)?.message, 'error');
+      }
+    } finally {
+      setLoading(false);
+      setActionId(null);
+    }
+  }
 
   async function openLocal() {
     if (loading) return;
@@ -393,12 +514,74 @@ function HomeScreen() {
           <div className="text-base font-medium mb-1 text-on-surface">Open .mo.blend…</div>
           <div className="text-xs text-on-surface-variant flex-1">Browse your filesystem for custom templates</div>
         </div>
+
+        {catalog.map(entry => {
+          const localPath = installed[entry.template_id];
+          const isInstalled = Boolean(localPath);
+          const busy = loading && actionId === entry.template_id;
+          return (
+            <div
+              key={entry.template_id}
+              className="bg-surface-container border border-outline-variant rounded-lg p-4 flex flex-col"
+              data-testid={`gallery-catalog-card-${entry.template_id}`}
+            >
+              {entry.preview_url && (
+                <img
+                  src={entry.preview_url}
+                  alt={entry.name}
+                  className="w-full h-32 object-cover rounded mb-3 bg-surface-container-low"
+                  data-testid={`gallery-preview-${entry.template_id}`}
+                />
+              )}
+              <div className="text-[10px] font-bold tracking-[0.05em] uppercase text-on-surface-variant mb-1">
+                {entry.category || 'OFFICIAL'}
+              </div>
+              <div className="text-base font-medium mb-1 text-on-surface">{entry.name}</div>
+              <div className="text-xs text-on-surface-variant mb-3 flex-1">
+                {entry.description || `Version ${entry.version}`}
+              </div>
+              {isInstalled && (
+                <div className="text-[10px] font-mono text-on-surface-variant mb-2 truncate">{localPath}</div>
+              )}
+              {isInstalled ? (
+                <button
+                  className="mt-auto self-start px-3 py-1.5 text-sm font-medium bg-primary-container text-on-primary-container rounded hover:brightness-110 transition disabled:opacity-50"
+                  onClick={() => openInstalled(entry, localPath)}
+                  disabled={loading}
+                  data-testid={`gallery-open-btn-${entry.template_id}`}
+                >
+                  {busy ? 'Opening…' : 'Open'}
+                </button>
+              ) : (
+                <button
+                  className="mt-auto self-start px-3 py-1.5 text-sm font-medium bg-primary-container text-on-primary-container rounded hover:brightness-110 transition disabled:opacity-50"
+                  onClick={() => installAndOpen(entry)}
+                  disabled={loading}
+                  data-testid={`gallery-install-btn-${entry.template_id}`}
+                >
+                  {busy ? 'Installing…' : 'Install'}
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      <div className="mt-6 text-xs text-on-surface-variant max-w-prose">
-        The Go backend automatically attaches to or starts the broker and pre-loads a default template on launch.
-        Full official gallery from lib.moblend.dev coming in M4.
-      </div>
+      {catalogLoading && (
+        <div className="mt-4 text-xs text-on-surface-variant" data-testid="gallery-catalog-loading">
+          Loading official catalog…
+        </div>
+      )}
+      {!catalogLoading && catalogError && catalog.length === 0 && (
+        <div className="mt-4 text-xs text-on-surface-variant max-w-prose" data-testid="gallery-catalog-offline">
+          Official catalog unavailable ({catalogError}). Use the local cards above, or refresh from Suite Manager when the broker is online.
+        </div>
+      )}
+      {!catalogLoading && !catalogError && catalog.length > 0 && (
+        <div className="mt-6 text-xs text-on-surface-variant max-w-prose">
+          Official templates from lib.moblend.dev. Installed copies are cached under <code>~/.moblend/templates/</code>.
+        </div>
+      )}
     </div>
   );
 }
@@ -457,12 +640,52 @@ function SuiteManager() {
   const { setStatus, refreshBroker } = useStatus();
   const [health, setHealth] = useState<any>(null);
   const [starting, setStarting] = useState(false);
+  const [registryUrl, setRegistryUrl] = useState(DEFAULT_REGISTRY_URL);
+  const [catalogCount, setCatalogCount] = useState<number | null>(null);
+  const [catalogFetchedAt, setCatalogFetchedAt] = useState<Date | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogRefreshing, setCatalogRefreshing] = useState(false);
+
+  async function loadCatalogStatus() {
+    try {
+      const cfg = await go.GetConfig();
+      const base = String((cfg as Record<string, unknown>)?.registryBaseUrl || DEFAULT_REGISTRY_URL);
+      setRegistryUrl(base);
+      const templates = await getTemplates({ timeoutMs: 12_000 });
+      setCatalogCount(templates.length);
+      setCatalogFetchedAt(new Date());
+      setCatalogError(null);
+    } catch (e: unknown) {
+      setCatalogError((e as Error)?.message || 'Catalog fetch failed');
+      setCatalogCount(null);
+    }
+  }
+
+  async function refreshCatalog() {
+    setCatalogRefreshing(true);
+    setStatus('Refreshing official catalog…', 'info');
+    try {
+      const templates = await refreshTemplates({ timeoutMs: 30_000 });
+      setCatalogCount(templates.length);
+      setCatalogFetchedAt(new Date());
+      setCatalogError(null);
+      setStatus(`Catalog refreshed (${templates.length} entries).`, 'success');
+    } catch (e: unknown) {
+      const msg = (e as Error)?.message || 'Catalog refresh failed';
+      setCatalogError(msg);
+      setCatalogCount(null);
+      setStatus('Catalog refresh failed: ' + msg, 'error');
+    } finally {
+      setCatalogRefreshing(false);
+    }
+  }
 
   async function refresh() {
     try {
       const h = await go.EngineHealth();
       setHealth(h);
       await refreshBroker();
+      await loadCatalogStatus();
     } catch (e: any) {
       setStatus('Health check error: ' + (e?.message || e), 'error');
     }
@@ -512,9 +735,11 @@ function SuiteManager() {
 
   const isLoaded = health && isBrokerUp(health);
 
+  const catalogOffline = catalogCount === 0 && Boolean(catalogError);
+
   return (
     <div style={{ padding: 24 }}>
-      <h3>Suite Manager (M3)</h3>
+      <h3>Suite Manager</h3>
       <div className="panel" style={{ padding: 12, maxWidth: 560 }}>
         <div style={{ marginBottom: 8 }}>
           <strong>Broker health:</strong>{' '}
@@ -536,6 +761,41 @@ function SuiteManager() {
           All UI data (manifest, parameters, viewport frames, slots) goes directly from React → broker.<br />
           The engine must be running before you can load templates or see live previews.
         </div>
+      </div>
+
+      <div className="panel" style={{ padding: 12, maxWidth: 560, marginTop: 16 }} data-testid="catalog-status-panel">
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>Official Template Library</div>
+        <div style={{ fontSize: 12, marginBottom: 6 }}>
+          <strong>Registry URL:</strong>{' '}
+          <span className="mono" data-testid="registry-base-url">{registryUrl}</span>
+        </div>
+        <div style={{ fontSize: 12, marginBottom: 6 }}>
+          <strong>Catalog entries:</strong>{' '}
+          <span data-testid="catalog-entry-count">{catalogCount ?? '…'}</span>
+        </div>
+        <div style={{ fontSize: 12, marginBottom: 8 }}>
+          <strong>Last fetch:</strong>{' '}
+          <span data-testid="catalog-last-fetch">
+            {catalogFetchedAt ? catalogFetchedAt.toLocaleString() : '—'}
+          </span>
+        </div>
+        {catalogOffline && (
+          <div style={{ fontSize: 12, color: 'var(--error)', marginBottom: 8 }} data-testid="catalog-offline-message">
+            Catalog offline or empty ({catalogError}). Check broker health and registry URL in config.json.
+          </div>
+        )}
+        {catalogError && !catalogOffline && (
+          <div style={{ fontSize: 12, color: 'var(--on-surface-variant)', marginBottom: 8 }}>
+            Last catalog check: {catalogError}
+          </div>
+        )}
+        <button
+          onClick={refreshCatalog}
+          disabled={catalogRefreshing}
+          data-testid="catalog-refresh-btn"
+        >
+          {catalogRefreshing ? 'Refreshing…' : 'Refresh catalog'}
+        </button>
       </div>
 
       <div style={{ marginTop: 16, fontSize: 12, opacity: .6 }}>

@@ -38,6 +38,11 @@ Stitch exports: [specs/stitch/README.md](../specs/stitch/README.md). Implement R
 - **`studio.db`** (M3a) — Studio-owned metadata: `recent_projects`, `asset_index`, `installed_templates`. Go package: `desktop/internal/store/`. M4c: `UpsertInstalledTemplate` / `ListInstalledTemplates` / `GetInstalledTemplate`; Wails bindings `InstallTemplate`, `ListInstalledTemplates`, `GetInstalledTemplatePath` in `app.go` + `template_install.go` (50MB cap, atomic write, version-aware cache skip). Binaries land in `<moblend_home>/templates/`. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md), [M4c spec](../specs/M4c%20-%20Go%20Template%20Install.md).
 - **`suite_logs.db`** (M3a) — append-only `log_events`; Studio writes via same `store` package. Do not log secrets.
 
+## Registry gallery (M4d)
+
+- Home `/` — `getTemplates()` from broker; Install/Open via `window.go.main.App` (`InstallTemplate`, `GetInstalledTemplatePath`). Do not import hung-prone WailsJS paths for these bindings in Vite-only dev — use `goApp()` dispatch (see `App.tsx`).
+- Suite Manager — catalog status + `POST /api/v1/templates/refresh`.
+
 ## Frontend verification
 
 All React/GUI changes: run Playwright E2E before claiming completion. Use `/desktop-e2e-verify` or see [desktop/README.md](README.md#automated-e2e-testing-required-for-gui-work).

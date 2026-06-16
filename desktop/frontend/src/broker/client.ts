@@ -115,3 +115,25 @@ export async function startExport(spec: Record<string, any> = {}) {
 export async function getExportStatus(jobId: string) {
   return api(`/api/v1/render/status/${encodeURIComponent(jobId)}`);
 }
+
+export interface CatalogEntry {
+  template_id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  version: string;
+  preview_url?: string;
+  manifest_url?: string;
+  download_url: string;
+}
+
+export async function getTemplates(opts?: { timeoutMs?: number }): Promise<CatalogEntry[]> {
+  return api<CatalogEntry[]>('/api/v1/templates', { timeoutMs: opts?.timeoutMs ?? 15_000 });
+}
+
+export async function refreshTemplates(opts?: { timeoutMs?: number }): Promise<CatalogEntry[]> {
+  return api<CatalogEntry[]>('/api/v1/templates/refresh', {
+    method: 'POST',
+    timeoutMs: opts?.timeoutMs ?? 30_000,
+  });
+}
