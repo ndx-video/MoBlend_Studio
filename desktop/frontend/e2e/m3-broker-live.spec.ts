@@ -5,7 +5,7 @@ import { injectWailsMocks } from './fixtures/mocks';
  * Optional integration tests against a live broker (scripts/dev.ps1 or Wails StartEngine).
  * Skipped automatically when nothing is listening on :8000.
  */
-test.describe('M3 — Live broker integration', () => {
+test.describe('M3 — Live broker integration @live-broker', () => {
   let brokerAvailable = false;
 
   test.beforeAll(async () => {

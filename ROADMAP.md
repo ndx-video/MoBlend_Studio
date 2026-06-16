@@ -59,7 +59,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 ---
 
-## M3 — Desktop MVP
+## M3 — Desktop MVP ✅ Complete
+
+**Status:** Complete — see [.progress/M003.016.asset-dnd-ingest-complete.md](.progress/M003.016.asset-dnd-ingest-complete.md) and earlier `M003.*` entries.
 
 **Goal:** Mo.Blend Studio end-to-end: Suite Manager spawns engine, live canvas, manifest form, slot timeline.
 
@@ -75,7 +77,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 ---
 
-## M3a — Local Persistence & Logging
+## M3a — Local Persistence & Logging ✅ Complete
+
+**Status:** Complete — see [.progress/M003a.002.persistence-scaffold.md](.progress/M003a.002.persistence-scaffold.md), [.progress/M003a.003.persistence-hardening.md](.progress/M003a.003.persistence-hardening.md).
 
 **Goal:** Proactive SQLite patterns under `<moblend_home>/` — component-scoped operational DBs plus a shared suite log DB — so M4+ features have a clear metadata layer without ad hoc JSON or a logging daemon.
 
@@ -156,6 +160,12 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 **Done when (in that repo):** Manifest validator/generator, UX sandbox, publish prep `.zip`
 
 **Relationship:** Does not block M0–M3. Authors can use plain Blender + manual manifest until the addon exists.
+
+---
+
+## Current focus
+
+**Next milestone:** [M4 — Registry Integration](#m4--registry-integration)
 
 ---
 

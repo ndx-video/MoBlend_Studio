@@ -1,6 +1,6 @@
 # M3a — Local Persistence & Suite Logging
 
-**Status:** Spec (implementation pending)  
+**Status:** Implemented (v1 complete — see `.progress/M003a.002`–`M003a.003`)  
 **Roadmap:** [ROADMAP.md § M3a](../ROADMAP.md#m3a--local-persistence--logging)  
 **Placement:** After M3 Desktop MVP, before M4 Registry Integration
 

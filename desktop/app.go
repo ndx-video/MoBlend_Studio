@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"mime"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,6 +18,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"moblend-studio/internal/moblendlog"
+	"moblend-studio/internal/store"
 
 	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -39,6 +43,10 @@ type App struct {
 
 	// Whether we are the process that started the current broker (so we are responsible for stopping it)
 	ownedEngine bool
+
+	// M3a persistence
+	studioDB *store.StudioDB
+	logDB    *store.LogDB
 }
 
 // NewApp creates a new App application struct
@@ -54,6 +62,8 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
+	a.initPersistence()
+
 	// Best-effort: start the headless broker on launch so the rest of the
 	// app (Suite Manager, editor) has something to talk to.
 	// Users can also control it explicitly from the Suite Manager screen.
@@ -66,6 +76,14 @@ func (a *App) startup(ctx context.Context) {
 // orphaned Blender processes when the user closes the Studio window.
 func (a *App) shutdown(ctx context.Context) {
 	_ = a.StopEngine()
+	if a.studioDB != nil {
+		_ = a.studioDB.Close()
+		a.studioDB = nil
+	}
+	if a.logDB != nil {
+		_ = a.logDB.Close()
+		a.logDB = nil
+	}
 }
 
 // Greet is the original boilerplate (kept for minimal diff / tests).
@@ -121,15 +139,53 @@ func (a *App) SetConfig(partial map[string]any) error {
 	return os.WriteFile(path, b, 0o644)
 }
 
-func (a *App) configPath() string {
+func (a *App) moblendHomeDir() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		home = "."
 	}
-	if stdruntime.GOOS == "windows" {
-		return filepath.Join(home, ".moblend", "config.json")
+	return filepath.Join(home, ".moblend")
+}
+
+func (a *App) configPath() string {
+	return filepath.Join(a.moblendHomeDir(), "config.json")
+}
+
+func (a *App) initPersistence() {
+	home := a.moblendHomeDir()
+	studio, err := store.OpenStudio(home)
+	if err != nil {
+		a.emitPersistenceWarning("studio.db unavailable: " + err.Error())
+		return
 	}
-	return filepath.Join(home, ".moblend", "config.json")
+	logs, err := store.OpenSuiteLogs(home)
+	if err != nil {
+		_ = studio.Close()
+		a.emitPersistenceWarning("suite_logs.db unavailable: " + err.Error())
+		return
+	}
+	a.studioDB = studio
+	a.logDB = logs
+	moblendlog.SetBackend(logs)
+
+	if recents, err := studio.ListRecents(10); err == nil {
+		paths := make([]string, 0, len(recents))
+		for _, r := range recents {
+			paths = append(paths, r.Path)
+		}
+		a.recents = paths
+	}
+
+	_ = moblendlog.Append("studio", "info", "studio.start", "Mo.Blend Studio started", map[string]any{
+		"home": home,
+	})
+}
+
+func (a *App) emitPersistenceWarning(msg string) {
+	if a.ctx != nil {
+		wailsruntime.LogError(a.ctx, msg)
+		wailsruntime.EventsEmit(a.ctx, "moblend:persistence:warning", msg)
+	}
 }
 
 // PickMoBlendFile opens a native file dialog filtered to .mo.blend and returns
@@ -149,13 +205,13 @@ func (a *App) PickMoBlendFile() (string, error) {
 }
 
 // GetRecentProjects returns the list of recently opened .mo.blend paths
-// (most recent first). Persisted via the suite config for convenience.
+// (most recent first). Persisted in studio.db (M3a).
 func (a *App) GetRecentProjects() []string {
 	return append([]string(nil), a.recents...)
 }
 
 // AddRecentProject inserts path at the front of recents (deduped, capped at 10)
-// and persists a lightweight copy in config.
+// and persists to studio.db (M3a).
 func (a *App) AddRecentProject(path string) {
 	if path == "" {
 		return
@@ -172,8 +228,12 @@ func (a *App) AddRecentProject(path string) {
 	}
 	a.recents = out
 
-	// Best-effort persist
-	_ = a.SetConfig(map[string]any{"recentProjects": a.recents})
+	if a.studioDB != nil {
+		_ = a.studioDB.UpsertRecent(path, filepath.Base(path), "")
+	}
+	_ = moblendlog.Append("studio", "info", "project.open", "Recent project updated", map[string]any{
+		"path": path,
+	})
 }
 
 // StartEngine ensures a broker is running (re-uses existing if one is already healthy on the port).
@@ -189,6 +249,9 @@ func (a *App) StartEngine(loadPath string) error {
 	// Fast path: broker already responding (our previous run, dev.ps1, or external).
 	// This is the main safeguard against port conflicts and repeated spawns.
 	if a.isBrokerHealthy() {
+		_ = moblendlog.Append("studio", "info", "engine.start", "Attached to running broker", map[string]any{
+			"owned": false,
+		})
 		if loadPath != "" {
 			_ = a.loadViaBroker(loadPath)
 		} else {
@@ -227,8 +290,15 @@ func (a *App) StartEngine(loadPath string) error {
 
 	if err := cmd.Start(); err != nil {
 		cancel()
+		_ = moblendlog.Append("studio", "error", "engine.start", "Failed to start Blender broker", map[string]any{
+			"error": err.Error(),
+		})
 		return fmt.Errorf("failed to start Blender broker: %w", err)
 	}
+
+	_ = moblendlog.Append("studio", "info", "engine.start", "Spawned Blender broker", map[string]any{
+		"owned": true,
+	})
 
 	a.engineCmd = cmd
 	a.engineCtx = ctx
@@ -263,6 +333,7 @@ func (a *App) StopEngine() error {
 		// We didn't start it — do not kill it.
 		a.engineCmd = nil
 		a.engineCancel = nil
+		_ = moblendlog.Append("studio", "info", "engine.stop", "Skipped stop (broker not owned)", nil)
 		return nil
 	}
 
@@ -275,6 +346,7 @@ func (a *App) StopEngine() error {
 		a.engineCmd = nil
 	}
 	a.ownedEngine = false
+	_ = moblendlog.Append("studio", "info", "engine.stop", "Stopped owned Blender broker", nil)
 	return nil
 }
 
@@ -386,10 +458,19 @@ func (a *App) CopyToAssetSandbox(paths []string) ([]string, error) {
 		if src == "" {
 			continue
 		}
-		final, err := a.copyOneDeduped(src, sandbox)
+		final, meta, err := a.copyOneDeduped(src, sandbox)
 		if err != nil {
 			// Continue with others; surface the first error at end if needed
 			continue
+		}
+		if a.studioDB != nil && meta != nil {
+			_ = a.studioDB.UpsertAssetIndex(
+				meta.contentHash,
+				final,
+				meta.originalName,
+				meta.mime,
+				meta.sizeBytes,
+			)
 		}
 		out = append(out, final)
 	}
@@ -545,43 +626,76 @@ func (a *App) killProcessTree(pid int) error {
 	return nil
 }
 
-func (a *App) copyOneDeduped(src, sandbox string) (string, error) {
+type assetCopyMeta struct {
+	contentHash  string
+	originalName string
+	mime         string
+	sizeBytes    int64
+}
+
+func (a *App) copyOneDeduped(src, sandbox string) (string, *assetCopyMeta, error) {
 	f, err := os.Open(src)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer f.Close()
 
+	info, err := f.Stat()
+	if err != nil {
+		return "", nil, err
+	}
+
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
-		return "", err
+		return "", nil, err
 	}
-	sum := hex.EncodeToString(h.Sum(nil))[:16]
+	fullHash := hex.EncodeToString(h.Sum(nil))
+	short := fullHash[:16]
 
 	ext := filepath.Ext(src)
 	if ext == "" {
 		ext = ".bin"
 	}
-	dstName := fmt.Sprintf("asset_%s%s", sum, ext)
+	dstName := fmt.Sprintf("asset_%s%s", short, ext)
 	dst := filepath.Join(sandbox, dstName)
+
+	mimeType := mime.TypeByExtension(ext)
+	if mimeType == "" {
+		buf := make([]byte, 512)
+		if _, err := f.Seek(0, 0); err == nil {
+			if n, _ := f.Read(buf); n > 0 {
+				mimeType = http.DetectContentType(buf[:n])
+			}
+		}
+	}
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+
+	meta := &assetCopyMeta{
+		contentHash:  fullHash,
+		originalName: filepath.Base(src),
+		mime:         mimeType,
+		sizeBytes:    info.Size(),
+	}
 
 	// Idempotent copy
 	if _, err := os.Stat(dst); err == nil {
-		return dst, nil
+		return dst, meta, nil
 	}
 	// Rewind and copy
 	if _, err := f.Seek(0, 0); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	out, err := os.Create(dst)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer out.Close()
 	if _, err := io.Copy(out, f); err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return dst, nil
+	return dst, meta, nil
 }
 
 // -------------------------------------------------------------------

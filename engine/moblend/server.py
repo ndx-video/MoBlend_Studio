@@ -35,6 +35,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from . import engine
+from . import log as moblend_log
+from .store import BrokerDB, moblend_home, open_broker_db
 
 # -------------------------------------------------------------------
 # Constants (wire + backpressure)
@@ -84,6 +86,10 @@ class BrokerTask:
 _action_queue: queue.Queue[BrokerTask] | None = None
 _latest_wanted_frame: int = -1
 _latest_lock = threading.Lock()
+
+_broker_db: BrokerDB | None = None
+_last_health_log: float = 0.0
+_health_log_lock = threading.Lock()
 
 # -------------------------------------------------------------------
 # Pydantic models (wire shapes per API spec)
@@ -302,12 +308,14 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
             ver = bpy.app.version_string
         except Exception:
             pass
-        return HealthResponse(
+        resp = HealthResponse(
             loaded=m is not None,
             template_id=(m or {}).get("template_id") if m else None,
             dirty=engine.is_dirty(),
             blender_version=ver,
         )
+        _maybe_log_health(resp.loaded, resp.template_id)
+        return resp
 
     @app.get("/api/v1/manifest")
     def get_manifest() -> dict[str, Any]:
@@ -416,6 +424,11 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
             job_id = engine.start_export_job(spec)
         except Exception as ex:
             raise _error("engine_error", f"Failed to start export: {ex}", 500)
+        if _broker_db is not None:
+            try:
+                _broker_db.upsert_export_job(job_id, "queued")
+            except Exception:
+                pass
         return {"job_id": job_id, "status": "queued"}
 
     @app.get("/api/v1/render/status/{job_id}")
@@ -423,6 +436,16 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
         st = engine.get_export_status(job_id)
         if st is None:
             raise _error("not_found", f"Unknown job_id {job_id}", 404, {"job_id": job_id})
+        if _broker_db is not None:
+            try:
+                _broker_db.upsert_export_job(
+                    job_id,
+                    str(st.get("status") or "unknown"),
+                    output_path=st.get("result_path"),
+                    error=st.get("error"),
+                )
+            except Exception:
+                pass
         return st
 
     @app.get("/api/v1/templates")
@@ -568,6 +591,24 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
     return app
 
 
+def _maybe_log_health(loaded: bool, template_id: str | None) -> None:
+    """Append broker.health at debug, throttled to once per minute."""
+    global _last_health_log
+    now = time.time()
+    with _health_log_lock:
+        if now-_last_health_log < 60.0:
+            return
+        _last_health_log = now
+    moblend_log.append(
+        "broker",
+        "debug",
+        "broker.health",
+        "Health probe",
+        loaded=loaded,
+        template_id=template_id,
+    )
+
+
 async def _send_ws_error(ws: WebSocket, code: str, message: str) -> None:
     try:
         msg = f"{code}:{message}".encode("utf-8")[:65535]
@@ -589,10 +630,19 @@ def serve_forever(host: str = "127.0.0.1", port: int = 8000, initial_load: str |
     - Optionally loads a template before entering the server loop (bootstrap convenience).
     - Keeps the Python script (and thus the Blender --background process) alive with a sleep loop.
     """
-    global _action_queue, _latest_wanted_frame
+    global _action_queue, _latest_wanted_frame, _broker_db
     if _action_queue is not None:
         print("[moblend:server] serve_forever called more than once — ignoring.")
         return
+
+    home = moblend_home()
+    try:
+        _broker_db = open_broker_db(home)
+        log_db = moblend_log.open_suite_logs(home)
+        moblend_log.set_default(log_db)
+        moblend_log.append("broker", "info", "broker.start", "Broker serve mode started", host=host, port=port)
+    except Exception as ex:
+        print(f"[moblend:server] WARNING: persistence init failed: {ex}")
 
     _action_queue = queue.Queue(maxsize=QUEUE_MAXSIZE)
     _latest_wanted_frame = -1

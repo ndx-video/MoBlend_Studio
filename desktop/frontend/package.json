@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --grep-invert @live-broker",
+    "test:e2e:live": "playwright test --grep @live-broker",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"
