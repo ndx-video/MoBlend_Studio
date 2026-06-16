@@ -204,6 +204,94 @@ func (s *StudioDB) ListRecents(limit int) ([]RecentProject, error) {
 	return out, rows.Err()
 }
 
+// UpsertInstalledTemplate records or updates an installed template row.
+func (s *StudioDB) UpsertInstalledTemplate(templateID, localPath, catalogVersion string) error {
+	if templateID == "" || localPath == "" {
+		return fmt.Errorf("templateID and localPath are required")
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err := s.db.Exec(
+		`INSERT INTO installed_templates (template_id, local_path, catalog_version, installed_at)
+		 VALUES (?, ?, ?, ?)
+		 ON CONFLICT(template_id) DO UPDATE SET
+		   local_path = excluded.local_path,
+		   catalog_version = excluded.catalog_version,
+		   installed_at = excluded.installed_at`,
+		templateID, localPath, catalogVersion, now,
+	)
+	return err
+}
+
+// ListInstalledTemplates returns installed templates ordered by installed_at descending.
+func (s *StudioDB) ListInstalledTemplates(limit int) ([]InstalledTemplate, error) {
+	query := `SELECT template_id, local_path, catalog_version, installed_at
+		 FROM installed_templates
+		 ORDER BY installed_at DESC`
+	args := []any{}
+	if limit > 0 {
+		query += ` LIMIT ?`
+		args = append(args, limit)
+	}
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []InstalledTemplate
+	for rows.Next() {
+		var it InstalledTemplate
+		var installed string
+		if err := rows.Scan(&it.TemplateID, &it.LocalPath, &it.CatalogVersion, &installed); err != nil {
+			return nil, err
+		}
+		t, err := time.Parse(time.RFC3339, installed)
+		if err != nil {
+			t = time.Time{}
+		}
+		it.InstalledAt = t
+		out = append(out, it)
+	}
+	return out, rows.Err()
+}
+
+// GetInstalledTemplate returns a single installed template row, or nil if missing.
+func (s *StudioDB) GetInstalledTemplate(templateID string) (*InstalledTemplate, error) {
+	if templateID == "" {
+		return nil, fmt.Errorf("templateID is required")
+	}
+	row := s.db.QueryRow(
+		`SELECT template_id, local_path, catalog_version, installed_at
+		 FROM installed_templates
+		 WHERE template_id = ?`,
+		templateID,
+	)
+	var it InstalledTemplate
+	var installed string
+	if err := row.Scan(&it.TemplateID, &it.LocalPath, &it.CatalogVersion, &installed); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	t, err := time.Parse(time.RFC3339, installed)
+	if err != nil {
+		t = time.Time{}
+	}
+	it.InstalledAt = t
+	return &it, nil
+}
+
+// DeleteInstalledTemplate removes an installed template row.
+func (s *StudioDB) DeleteInstalledTemplate(templateID string) error {
+	if templateID == "" {
+		return fmt.Errorf("templateID is required")
+	}
+	_, err := s.db.Exec(`DELETE FROM installed_templates WHERE template_id = ?`, templateID)
+	return err
+}
+
 // UpsertAssetIndex records a sandbox asset metadata row.
 func (s *StudioDB) UpsertAssetIndex(contentHash, sandboxPath, originalName, mime string, sizeBytes int64) error {
 	if contentHash == "" || sandboxPath == "" {

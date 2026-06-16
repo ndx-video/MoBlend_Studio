@@ -26,6 +26,10 @@ export function GetDefaultTemplatePath() {
   return window['go']['main']['App']['GetDefaultTemplatePath']();
 }
 
+export function GetInstalledTemplatePath(arg1) {
+  return window['go']['main']['App']['GetInstalledTemplatePath'](arg1);
+}
+
 export function GetRecentProjects() {
   return window['go']['main']['App']['GetRecentProjects']();
 }
@@ -34,8 +38,16 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function InstallTemplate(arg1, arg2, arg3) {
+  return window['go']['main']['App']['InstallTemplate'](arg1, arg2, arg3);
+}
+
 export function ListAssetSandbox() {
   return window['go']['main']['App']['ListAssetSandbox']();
+}
+
+export function ListInstalledTemplates() {
+  return window['go']['main']['App']['ListInstalledTemplates']();
 }
 
 export function OpenDevTools() {

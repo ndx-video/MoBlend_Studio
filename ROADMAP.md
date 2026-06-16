@@ -152,7 +152,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 - `<moblend_home>/catalog/index.json` + `broker.db` `catalog_cache` populated
 - `engine/tests/m4_catalog_test.py` passes
 
-### M4c — Go Template Install
+### M4c — Go Template Install ✅ Complete
+
+**Status:** Complete — see [.progress/M004c.001.go-template-install.md](.progress/M004c.001.go-template-install.md).
 
 **Spec:** [M4c — Go Template Install](specs/M4c%20-%20Go%20Template%20Install.md) · Skill: `/implement-m4c-go-install`
 
@@ -223,7 +225,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 ## Current focus
 
-**Next slice:** [M4c — Go Template Install](#m4c--go-template-install) (then M4d)
+**Next slice:** [M4d — Gallery UI and Suite Manager](#m4d--gallery-ui-and-suite-manager)
 
 ---
 

@@ -111,6 +111,53 @@ func TestStudioAssetIndexUpsert(t *testing.T) {
 	}
 }
 
+func TestStudioInstalledTemplatesRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	studio, err := OpenStudio(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer studio.Close()
+
+	localPath := filepath.Join(dir, "templates", "parametric-cube-demo.mo.blend")
+	if err := studio.UpsertInstalledTemplate("parametric-cube-demo", localPath, "1.0.0"); err != nil {
+		t.Fatal(err)
+	}
+	if err := studio.UpsertInstalledTemplate("lower-third", filepath.Join(dir, "templates", "lower-third.mo.blend"), "2.1.0"); err != nil {
+		t.Fatal(err)
+	}
+	if err := studio.UpsertInstalledTemplate("parametric-cube-demo", localPath, "1.1.0"); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := studio.GetInstalledTemplate("parametric-cube-demo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got == nil || got.CatalogVersion != "1.1.0" || got.LocalPath != localPath {
+		t.Fatalf("unexpected installed template row: %+v", got)
+	}
+
+	all, err := studio.ListInstalledTemplates(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("expected 2 installed templates, got %d: %+v", len(all), all)
+	}
+	if all[0].TemplateID != "parametric-cube-demo" {
+		t.Fatalf("expected most recent first, got %+v", all)
+	}
+
+	missing, err := studio.GetInstalledTemplate("missing-template")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing != nil {
+		t.Fatalf("expected nil for missing template, got %+v", missing)
+	}
+}
+
 func TestLogAppendAndTail(t *testing.T) {
 	dir := t.TempDir()
 	logs, err := OpenSuiteLogs(dir)

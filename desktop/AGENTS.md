@@ -35,7 +35,7 @@ Stitch exports: [specs/stitch/README.md](../specs/stitch/README.md). Implement R
 
 - `wails.json` — window size ≥1280×800 (PRD 4 §10.5)
 - Suite config: `%USERPROFILE%\.moblend\config.json` — human-editable shared settings (PRD 4 §7)
-- **`studio.db`** (M3a) — Studio-owned metadata: `recent_projects`, `asset_index`, `installed_templates`. Go package: `desktop/internal/store/`. M4c adds install CRUD + `InstallTemplate` binding. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md), [M4c spec](../specs/M4c%20-%20Go%20Template%20Install.md).
+- **`studio.db`** (M3a) — Studio-owned metadata: `recent_projects`, `asset_index`, `installed_templates`. Go package: `desktop/internal/store/`. M4c: `UpsertInstalledTemplate` / `ListInstalledTemplates` / `GetInstalledTemplate`; Wails bindings `InstallTemplate`, `ListInstalledTemplates`, `GetInstalledTemplatePath` in `app.go` + `template_install.go` (50MB cap, atomic write, version-aware cache skip). Binaries land in `<moblend_home>/templates/`. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md), [M4c spec](../specs/M4c%20-%20Go%20Template%20Install.md).
 - **`suite_logs.db`** (M3a) — append-only `log_events`; Studio writes via same `store` package. Do not log secrets.
 
 ## Frontend verification

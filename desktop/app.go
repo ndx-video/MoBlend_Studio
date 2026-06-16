@@ -438,6 +438,40 @@ func (a *App) PickAssetFile(kind string) (string, error) {
 	return wailsruntime.OpenFileDialog(a.ctx, opts)
 }
 
+// InstallTemplate downloads and caches a .mo.blend binary from the library
+// into ~/.moblend/templates/. Skips re-download when catalog_version matches
+// an existing on-disk file. Go never parses the binary.
+func (a *App) InstallTemplate(templateID, downloadURL, catalogVersion string) (string, error) {
+	return installTemplateBinary(a.moblendHomeDir(), a.studioDB, templateID, downloadURL, catalogVersion)
+}
+
+// ListInstalledTemplates returns installed template rows from studio.db
+// (most recently installed first).
+func (a *App) ListInstalledTemplates() ([]store.InstalledTemplate, error) {
+	if a.studioDB == nil {
+		return nil, fmt.Errorf("studio.db unavailable")
+	}
+	return a.studioDB.ListInstalledTemplates(0)
+}
+
+// GetInstalledTemplatePath returns the local path for an installed template,
+// or ("", false) when not installed or the file is missing.
+func (a *App) GetInstalledTemplatePath(templateID string) (string, bool) {
+	if a.studioDB == nil || templateID == "" {
+		return "", false
+	}
+	row, err := a.studioDB.GetInstalledTemplate(templateID)
+	if err != nil || row == nil {
+		return "", false
+	}
+	info, statErr := os.Stat(row.LocalPath)
+	if statErr != nil || info.Size() == 0 {
+		_ = a.studioDB.DeleteInstalledTemplate(templateID)
+		return "", false
+	}
+	return row.LocalPath, true
+}
+
 // CopyToAssetSandbox copies the given local files into the secure user
 // sandbox (%USERPROFILE%\.moblend\assets on Windows) with SHA-256 content
 // deduplication. Returns the final sandbox paths.
