@@ -1,0 +1,13 @@
+---
+description: M3a SQLite persistence and suite logging conventions under ~/.moblend/
+globs: desktop/internal/store/**,desktop/**/store*.go,engine/moblend/store.py,engine/moblend/log.py
+alwaysApply: false
+---
+
+- Operational DBs: `studio.db` (Go only), `broker.db` (Python only). Logs: `suite_logs.db` (append-only).
+- `config.json` stays human-editable; do not move Blender path / broker URL into SQLite.
+- `.mo.blend`, `assets/`, `templates/` are authoritative; SQLite is index/cache only.
+- Open all DBs with `PRAGMA journal_mode=WAL` and `PRAGMA busy_timeout=5000`.
+- Migrations via `schema_migrations` table; never edit applied migrations.
+- Never log secrets in `log_events.context_json`.
+- No logging daemon or HTTP log ingest in M3a. Spec: specs/M3a - Local Persistence & Logging.md

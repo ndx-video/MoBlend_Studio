@@ -125,4 +125,4 @@ Swagger / OpenAPI is at http://127.0.0.1:8000/docs when the broker is running.
 - M4 adds real `GET /api/v1/templates` backed by the registry index (currently a stub).
 - Slots, asset ingest, MCP, and video export jobs come later.
 
-See [ROADMAP.md](../ROADMAP.md), [PRD 3](../specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md), [API & Function Spec](../specs/Mo.Blend%20API%20%26%20Function%20Spec.md), and AGENTS.md (single-port, binary WS only, queue+timer rules).
+See [ROADMAP.md](../ROADMAP.md), [PRD 3](../specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md), [API & Function Spec](../specs/Mo.Blend%20API%20%26%20Function%20Spec.md), [M3a persistence spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md), and AGENTS.md (single-port, binary WS only, queue+timer rules).

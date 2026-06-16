@@ -47,7 +47,9 @@ Stitch exports (screenshots + tokens): [specs/stitch/README.md](../specs/stitch/
 
 ## Configuration
 
-`wails.json` — project settings. Window size should be ≥1280×800 for Stitch layouts (PRD 4 §10.5). User/engine config: `%USERPROFILE%\.moblend\config.json` (PRD 4 §7).
+`wails.json` — project settings. Window size should be ≥1280×800 for Stitch layouts (PRD 4 §10.5).
+
+**`<moblend_home>`** (`%USERPROFILE%\.moblend\`): `config.json` (shared settings), `studio.db` + `suite_logs.db` (M3a — see [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md)).
 
 ## Automated E2E Testing (Required for GUI Work)
 

@@ -11,7 +11,7 @@ test.describe('M3 — Static screens (assets, export, settings)', () => {
   test('assets screen explains sandbox drop flow', async ({ page }) => {
     await page.getByTestId('nav-assets').click();
     await expect(page.getByTestId('assets-screen')).toBeVisible();
-    await expect(page.getByText(/Drag & drop files/i)).toBeVisible();
+    await expect(page.getByText(/Drop files anywhere in the window/i)).toBeVisible();
   });
 
   test('export screen documents editor-triggered jobs', async ({ page }) => {

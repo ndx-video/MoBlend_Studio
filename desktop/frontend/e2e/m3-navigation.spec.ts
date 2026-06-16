@@ -32,6 +32,14 @@ test.describe('M3 — App shell & navigation', () => {
     expect(clip).toBe(msg);
   });
 
+  test('status bar shift-click opens notification history overlay', async ({ page }) => {
+    await page.getByTestId('status-bar').click({ modifiers: ['Shift'] });
+    await expect(page.getByTestId('status-history-modal')).toBeVisible({ timeout: 3000 });
+    await expect(page.getByTestId('status-history-list')).toBeVisible();
+    await page.getByTestId('status-history-close').click();
+    await expect(page.getByTestId('status-history-overlay')).not.toBeVisible();
+  });
+
   test('status bar double-click copies message history to clipboard', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.getByTestId('status-bar').dblclick();

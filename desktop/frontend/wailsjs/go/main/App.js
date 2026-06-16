@@ -34,8 +34,16 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function ListAssetSandbox() {
+  return window['go']['main']['App']['ListAssetSandbox']();
+}
+
 export function OpenDevTools() {
   return window['go']['main']['App']['OpenDevTools']();
+}
+
+export function PickAssetFile(arg1) {
+  return window['go']['main']['App']['PickAssetFile'](arg1);
 }
 
 export function PickMoBlendFile() {

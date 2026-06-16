@@ -30,6 +30,7 @@ Mo.Blend is a small set of cooperating components (codenames in **bold**). The *
 | [specs/Mo.Blend API & Function Spec.md](specs/Mo.Blend%20API%20&%20Function%20Spec.md) | REST, binary WebSocket, and MCP communication contracts. |
 | [specs/manifest.schema.json](specs/manifest.schema.json) | Canonical `.mo.blend` manifest schema (the template ↔ client contract). |
 | [specs/](specs/) | All per-PRD specifications. |
-| [ROADMAP.md](ROADMAP.md) | Milestone build order (M0–M6) and "Done when" exit criteria. |
+| [ROADMAP.md](ROADMAP.md) | Milestone build order (M0–M6, M3a persistence) and "Done when" exit criteria. |
+| [specs/M3a - Local Persistence & Logging.md](specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md) | SQLite layout under `~/.moblend/`, logging conventions, one-shot implementation prompt. |
 | [AGENTS.md](AGENTS.md) | Guide for AI coding agents: architecture rules you must not violate, conventions, and where to look. |
 | **[.progress/README.md](.progress/README.md)** | How development rolls — the append-only progress log: naming, immutability, and when to write an entry. Browse [.progress/](.progress/) to see the development history. |

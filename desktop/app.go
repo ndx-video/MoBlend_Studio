@@ -59,14 +59,7 @@ func (a *App) startup(ctx context.Context) {
 	// Users can also control it explicitly from the Suite Manager screen.
 	_ = a.StartEngine("")
 
-	// Register for file drops (Wails runtime). The Go side performs the
-	// secure sandbox copy; the frontend can also listen via runtime.OnFileDrop.
-	wailsruntime.OnFileDrop(ctx, func(x, y int, paths []string) {
-		// Fire-and-forget the copy; UI will refresh via its own mechanisms or events.
-		_, _ = a.CopyToAssetSandbox(paths)
-		// Emit a simple event so React can refresh an assets list if mounted.
-		wailsruntime.EventsEmit(ctx, "moblend:assets:updated", paths)
-	})
+	// File drops: EnableFileDrop + frontend runtime.OnFileDrop → CopyToAssetSandbox binding.
 }
 
 // shutdown is wired from main.go OnShutdown to guarantee we don't leave
@@ -309,6 +302,70 @@ func (a *App) EngineHealth() (map[string]any, error) {
 	return out, nil
 }
 
+// assetSandboxDir returns ~/.moblend/assets (created on demand by callers).
+func (a *App) assetSandboxDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".moblend", "assets"), nil
+}
+
+// ListAssetSandbox returns absolute paths of files in the user asset sandbox.
+func (a *App) ListAssetSandbox() ([]string, error) {
+	sandbox, err := a.assetSandboxDir()
+	if err != nil {
+		return nil, err
+	}
+	entries, err := os.ReadDir(sandbox)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []string{}, nil
+		}
+		return nil, err
+	}
+	var out []string
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		out = append(out, filepath.Join(sandbox, e.Name()))
+	}
+	return out, nil
+}
+
+// PickAssetFile opens a native file dialog filtered by asset kind
+// ("image", "video", or "font"). Returns empty string on cancel.
+func (a *App) PickAssetFile(kind string) (string, error) {
+	if a.ctx == nil {
+		return "", fmt.Errorf("app context not ready")
+	}
+	var filters []wailsruntime.FileFilter
+	switch strings.ToLower(strings.TrimSpace(kind)) {
+	case "image":
+		filters = []wailsruntime.FileFilter{
+			{DisplayName: "Images", Pattern: "*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp;*.tiff;*.tif"},
+		}
+	case "video":
+		filters = []wailsruntime.FileFilter{
+			{DisplayName: "Video", Pattern: "*.mp4;*.mov;*.avi;*.mkv;*.webm"},
+		}
+	case "font":
+		filters = []wailsruntime.FileFilter{
+			{DisplayName: "Fonts", Pattern: "*.ttf;*.otf;*.woff;*.woff2"},
+		}
+	default:
+		filters = []wailsruntime.FileFilter{
+			{DisplayName: "All Files", Pattern: "*.*"},
+		}
+	}
+	opts := wailsruntime.OpenDialogOptions{
+		Title:   "Choose asset file",
+		Filters: filters,
+	}
+	return wailsruntime.OpenFileDialog(a.ctx, opts)
+}
+
 // CopyToAssetSandbox copies the given local files into the secure user
 // sandbox (%USERPROFILE%\.moblend\assets on Windows) with SHA-256 content
 // deduplication. Returns the final sandbox paths.
@@ -316,11 +373,10 @@ func (a *App) CopyToAssetSandbox(paths []string) ([]string, error) {
 	if len(paths) == 0 {
 		return nil, nil
 	}
-	home, err := os.UserHomeDir()
+	sandbox, err := a.assetSandboxDir()
 	if err != nil {
 		return nil, err
 	}
-	sandbox := filepath.Join(home, ".moblend", "assets")
 	if err := os.MkdirAll(sandbox, 0o755); err != nil {
 		return nil, err
 	}

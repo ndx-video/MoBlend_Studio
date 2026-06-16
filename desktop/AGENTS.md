@@ -31,10 +31,12 @@ Go backend changes require restarting `wails dev` (Ctrl+C, relaunch). Frontend h
 
 Stitch exports: [specs/stitch/README.md](../specs/stitch/README.md). Implement React per PRD 4 §11 — do not paste Stitch `code.html`.
 
-## Configuration
+## Configuration & persistence
 
 - `wails.json` — window size ≥1280×800 (PRD 4 §10.5)
-- User config: `%USERPROFILE%\.moblend\config.json` (PRD 4 §7)
+- Suite config: `%USERPROFILE%\.moblend\config.json` — human-editable shared settings (PRD 4 §7)
+- **`studio.db`** (M3a) — Studio-owned metadata: `recent_projects`, `asset_index`, `installed_templates` stub. Go package: `desktop/internal/store/`. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md).
+- **`suite_logs.db`** (M3a) — append-only `log_events`; Studio writes via same `store` package. Do not log secrets.
 
 ## Frontend verification
 

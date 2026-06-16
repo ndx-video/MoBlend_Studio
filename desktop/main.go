@@ -20,6 +20,10 @@ func main() {
 		Title:  "Mo.Blend Studio",
 		Width:  1280,
 		Height: 800,
+		DragAndDrop: &options.DragAndDrop{
+			EnableFileDrop:     true,
+			DisableWebViewDrop: true,
+		},
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},

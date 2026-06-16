@@ -75,6 +75,29 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in [`specs/`]
 
 ---
 
+## M3a — Local Persistence & Logging
+
+**Goal:** Proactive SQLite patterns under `<moblend_home>/` — component-scoped operational DBs plus a shared suite log DB — so M4+ features have a clear metadata layer without ad hoc JSON or a logging daemon.
+
+**Spec:** [M3a — Local Persistence & Logging](specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md) (includes **one-shot implementation prompt** in §11)
+
+**PRD refs:** [PRD 4](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md) §4 Suite Manager diagnostics, §7 config; [PRD 1](specs/PRD%201%20-%20Blender%20Headless%20Base%20Compute.md) §5 `<moblend_home>`
+
+**Done when:**
+- `<moblend_home>/studio.db`, `broker.db`, and `suite_logs.db` exist with v1 schemas and migration runners
+- `studio.db` owns recents (migrated from `config.json` `recentProjects`), asset index rows on sandbox copy, stub `installed_templates`
+- `broker.db` owns stub `export_jobs` and `catalog_cache` tables; wired on broker serve startup
+- `suite_logs.db` receives append-only events from Studio Go and broker Python (`WAL` + `busy_timeout`); no secrets in `context_json`
+- Thin wrappers: `desktop/internal/store/` (Go), `engine/moblend/store.py` + `engine/moblend/log.py` (Python)
+- Go unit tests + host-Python `engine/tests/m3a_store_test.py` pass; Playwright E2E still green if recents bindings changed
+- Agent docs updated (this ROADMAP, spec, nested `AGENTS.md` files)
+
+**Out of scope:** Logging micro-daemon, HTTP log ingest, Suite Manager log viewer UI, M4 catalog population, log retention/pruning jobs
+
+**Progress files:** Use milestone token `M003a` (e.g. `M003a.001.persistence-scaffold.md`).
+
+---
+
 ## M4 — Registry Integration
 
 **Goal:** Template gallery from the official library at `lib.moblend.dev` (backed by `moblend-registry` `index.json`); one-click install to `~/.moblend/templates/`.
@@ -144,6 +167,6 @@ At the start of each milestone, bring into context:
 3. [API spec](specs/Mo.Blend%20API%20&%20Function%20Spec.md) when touching the broker or clients
 4. Latest entries in [.progress/](.progress/) for the current milestone (audit trail; append-only)
 
-When work completes, agents **must** add a progress file per [.progress/README.md](.progress/README.md) — `{milestone}.{index}.{descriptor}.md` (e.g. `M001.001.engine-bootstrap.md`; the milestone token is zero-padded to three digits, so M0 → `M000`). Never edit prior progress files.
+When work completes, agents **must** add a progress file per [.progress/README.md](.progress/README.md) — `{milestone}.{index}.{descriptor}.md` (e.g. `M001.001.engine-bootstrap.md`; the milestone token is zero-padded to three digits, so M0 → `M000`). Sub-milestone **M3a** uses token `M003a` (e.g. `M003a.001.persistence-scaffold.md`). Never edit prior progress files.
 
 No separate `.planning/` tree — PRDs + this ROADMAP define targets; `.progress/` records history.

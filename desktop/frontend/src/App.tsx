@@ -5,6 +5,9 @@ import { StatusProvider, useStatus, isBrokerUp } from './layout/StatusContext';
 import { useViewportStream } from './broker/useViewportStream';
 import { getHealth, getManifest, loadProject, patchParameters, patchSlots, startExport, getExportStatus, Manifest } from './broker/client';
 import { FlowError, runStep } from './util/flow';
+import { basename, inferAssetKind, isAssetParamType, ingestAssetParam, listSandboxAssets } from './util/assets';
+import { AssetParamRow } from './components/AssetParamRow';
+import { AssetDropProvider, useAssetDrop } from './context/AssetDropContext';
 import * as WailsApp from '../wailsjs/go/main/App';
 
 declare const window: Window & { go?: { main?: { App?: Record<string, unknown> } } };
@@ -24,6 +27,8 @@ function useGoBindings() {
     GetRecentProjects: wailsOr(WailsApp.GetRecentProjects, async () => []),
     AddRecentProject: wailsOr(WailsApp.AddRecentProject, async (_p: string) => {}),
     CopyToAssetSandbox: wailsOr(WailsApp.CopyToAssetSandbox, async (ps: string[]) => ps),
+    ListAssetSandbox: wailsOr(WailsApp.ListAssetSandbox, async () => [] as string[]),
+    PickAssetFile: wailsOr(WailsApp.PickAssetFile, async (_k: string) => ''),
     GetBrokerBaseURL: wailsOr(WailsApp.GetBrokerBaseURL, async () => 'http://127.0.0.1:8000'),
     EngineHealth: wailsOr(WailsApp.EngineHealth, async () => ({ status: 'unreachable', error: 'Wails bindings not loaded' })),
     GetDefaultTemplatePath: wailsOr(WailsApp.GetDefaultTemplatePath, async () => ''),
@@ -41,7 +46,7 @@ function EditorScreen() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const vp = useViewportStream(canvasRef);
   const { startPreview, stopPreview } = vp;
-  const { setStatus } = useStatus();
+  const { setStatus, level: statusLevel } = useStatus();
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [loading, setLoading] = useState(false);
   const [paramValues, setParamValues] = useState<Record<string, any>>({});
@@ -51,6 +56,7 @@ function EditorScreen() {
   const paramDebounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const go = useGoBindings();
   const nav = useNavigate();
+  const assetDrop = useAssetDrop();
 
   async function loadCurrent() {
     setLoading(true);
@@ -66,6 +72,9 @@ function EditorScreen() {
       (m.parameters || []).forEach(p => { if (p.default !== undefined) init[p.id] = p.default; });
       setParamValues(init);
       setSlots(m.slots || []);
+      assetDrop.paramIngestHandlers.current = (paramId, value) => {
+        setParamValues(v => ({ ...v, [paramId]: value }));
+      };
     } catch (e: unknown) {
       if (!(e instanceof FlowError)) {
         setStatus('[editor] Manifest failed: ' + (e as Error)?.message, 'error');
@@ -126,6 +135,7 @@ function EditorScreen() {
 
   // Status bar checkpoints for viewport pipeline (no silent black canvas)
   useEffect(() => {
+    if (statusLevel === 'error') return;
     if (!manifest) {
       setStatus('[editor] Waiting for manifest…', 'warning');
       return;
@@ -158,7 +168,7 @@ function EditorScreen() {
       setStatus('[editor] Viewport WS open — waiting for first frame…', 'info');
     }
   }, [
-    manifest, setStatus, vp.bytesReceived, vp.connected, vp.fps, vp.lastFrame,
+    manifest, setStatus, statusLevel, vp.bytesReceived, vp.connected, vp.fps, vp.lastFrame,
     vp.lastPaintError, vp.lastWsError, vp.paintErrors, vp.painted, vp.wsErrors,
   ]);
 
@@ -227,6 +237,16 @@ function EditorScreen() {
           </div>
         )}
         {(manifest?.parameters || []).map(p => (
+          isAssetParamType(p.type) ? (
+            <div key={p.id} style={{ marginBottom: 10 }}>
+              <AssetParamRow
+                param={p}
+                value={String(paramValues[p.id] ?? p.default ?? '')}
+                onIngested={(id, value) => setParamValues(v => ({ ...v, [id]: value }))}
+                setStatus={setStatus}
+              />
+            </div>
+          ) : (
           <div key={p.id} style={{ marginBottom: 10 }} data-testid={`param-row-${p.id}`}>
             <div style={{ fontSize: 12, marginBottom: 2 }}>{p.label || p.id} <span style={{ opacity: .5 }}>({p.type})</span></div>
             {p.type === 'float' || p.type === 'int' ? (
@@ -250,6 +270,7 @@ function EditorScreen() {
                      data-testid={`param-input-${p.id}`} />
             )}
           </div>
+          )
         ))}
 
         <div style={{ marginTop: 16, fontWeight: 600 }}>Slots (drag to change — simple MVP)</div>
@@ -526,16 +547,106 @@ function SuiteManager() {
 }
 
 function AssetsScreen() {
+  const { setStatus } = useStatus();
+  const { refreshSandboxSignal, refreshManifest, lastManifest, onParamIngested } = useAssetDrop();
+  const [files, setFiles] = useState<string[]>([]);
+  const [assignParam, setAssignParam] = useState<Record<number, string>>({});
+  const assetParams = (lastManifest?.parameters || []).filter(p => isAssetParamType(p.type));
+
+  async function loadFiles() {
+    try {
+      setFiles(await listSandboxAssets());
+    } catch (e: unknown) {
+      setStatus('[asset] List sandbox failed: ' + (e as Error)?.message, 'error');
+    }
+  }
+
+  useEffect(() => {
+    void loadFiles();
+    void refreshManifest();
+  }, [refreshSandboxSignal]);
+
+  async function ingestAt(index: number, path: string) {
+    const paramId = assignParam[index];
+    if (!paramId) {
+      setStatus('[asset] Select a parameter first.', 'warning');
+      return;
+    }
+    const param = assetParams.find(p => p.id === paramId);
+    if (!param) return;
+    try {
+      const kind = inferAssetKind(path);
+      if (kind !== param.type) {
+        setStatus(`[asset] Wrong file type for ${param.label || param.id}`, 'error');
+        return;
+      }
+      const result = await ingestAssetParam(paramId, path, setStatus);
+      onParamIngested(paramId, String(result.value));
+    } catch (e: unknown) {
+      if (!(e instanceof FlowError)) {
+        setStatus('[asset] Ingest failed: ' + (e as Error)?.message, 'error');
+      }
+    }
+  }
+
   return (
     <div className="p-6" data-testid="assets-screen">
       <div className="section-label mb-2">LOCAL ASSETS</div>
       <div className="panel p-4 mb-4">
-        <div className="text-sm mb-2">Drag &amp; drop files here or into the main window.</div>
+        <div className="text-sm mb-2">Drop files anywhere in the window.</div>
         <div className="text-xs text-[var(--on-surface-variant)]">
-          Supported: images, video, fonts. Files are hashed and copied to the sandbox by Go, then ingested via the broker for asset parameters.
+          Images, video, and fonts are hashed and copied to <code>~/.moblend/assets/</code> by Go, then ingested via PATCH /parameters.
         </div>
       </div>
-      <div className="text-xs text-[var(--on-surface-variant)]">M3: basic sandbox + drop wired. Full browser + previews in later milestones.</div>
+
+      <div data-testid="assets-list">
+        {files.length === 0 && (
+          <div className="text-sm text-[var(--on-surface-variant)] p-4 panel">
+            No sandbox files yet. Drop a file on the window or use Editor → Choose file.
+          </div>
+        )}
+        {files.map((path, index) => {
+          const name = basename(path);
+          const kind = inferAssetKind(path) || 'unknown';
+          return (
+            <div
+              key={path}
+              className="panel p-3 mb-2 flex flex-col gap-2"
+              data-testid={`asset-item-${index}`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wide text-[var(--on-surface-variant)]">{kind}</span>
+                <span className="font-medium text-sm">{name}</span>
+              </div>
+              <div className="mono text-[10px] text-[var(--on-surface-variant)] truncate">{path}</div>
+              {assetParams.length > 0 ? (
+                <div className="flex gap-2 items-center flex-wrap">
+                  <select
+                    value={assignParam[index] || ''}
+                    onChange={e => setAssignParam(s => ({ ...s, [index]: e.target.value }))}
+                    className="text-sm"
+                    data-testid="asset-assign-select"
+                  >
+                    <option value="">Ingest into…</option>
+                    {assetParams.map(p => (
+                      <option key={p.id} value={p.id}>{p.label || p.id} ({p.type})</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => ingestAt(index, path)}
+                    data-testid="asset-ingest-btn"
+                  >
+                    Ingest
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-[var(--on-surface-variant)]">Load a template with asset parameters to ingest.</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -621,7 +732,9 @@ export default function App() {
       }}
       startEngine={(p) => go.StartEngine(p ?? '')}
     >
-      <AppRoutes />
+      <AssetDropProvider>
+        <AppRoutes />
+      </AssetDropProvider>
     </StatusProvider>
   );
 }

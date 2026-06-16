@@ -31,6 +31,12 @@ engine/
 
 After engine changes, run `/engine-verify` or the commands in [engine/README.md](README.md).
 
+## Persistence (M3a)
+
+- **`broker.db`** — broker-owned index: `export_jobs`, `catalog_cache` stub. Package: `engine/moblend/store.py`.
+- **`suite_logs.db`** — shared append-only logs via `engine/moblend/log.py` (`component=broker`). WAL + short transactions.
+- Never store manifest JSON, bpy session state, or frames in SQLite. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md).
+
 ## Security
 
 Force `use_scripts_auto_execute = False` early. Validate manifest types before queueing. Bind broker to `127.0.0.1` by default.

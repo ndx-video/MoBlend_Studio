@@ -24,13 +24,26 @@ export function createBrokerState(): MockBrokerState {
   };
 }
 
+const MOCK_SANDBOX_PNG = 'C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_abc123.png';
+const MOCK_SANDBOX_LIST = [
+  MOCK_SANDBOX_PNG,
+  'C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_def456.ttf',
+];
+
 export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string }) {
   const brokerBase = opts?.brokerBase ?? 'http://127.0.0.1:8000';
   await page.addInitScript((base: string) => {
+    const eventListeners: Record<string, Array<(...args: unknown[]) => void>> = {};
+
     (window as any).go = {
       main: {
         App: {
           PickMoBlendFile: async () => 'C:\\\\TEMP\\\\m1_minimal_test.mo.blend',
+          PickAssetFile: async (kind: string) => {
+            if (kind === 'font') return 'C:\\\\TEMP\\\\picked_font.ttf';
+            if (kind === 'video') return 'C:\\\\TEMP\\\\picked_clip.mp4';
+            return 'C:\\\\TEMP\\\\picked_logo.png';
+          },
           StartEngine: async (_loadPath?: string) => {},
           StopEngine: async () => {},
           GetRecentProjects: async () => ['C:\\\\TEMP\\\\m1_minimal_test.mo.blend', 'C:\\\\TEMP\\\\other_project.mo.blend'],
@@ -39,7 +52,20 @@ export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string 
           EngineHealth: async () => ({ loaded: true, template_id: 'm1-roundtrip-test', dirty: false, status: 'ok' }),
           GetConfig: async () => ({}),
           SetConfig: async (_cfg: unknown) => {},
-          CopyToAssetSandbox: async (paths: string[]) => paths,
+          CopyToAssetSandbox: async (paths: string[]) => {
+            const p = paths[0] || '';
+            if (p.toLowerCase().includes('.ttf') || p.toLowerCase().includes('font')) {
+              return ['C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_def456.ttf'];
+            }
+            if (p.toLowerCase().includes('.mp4') || p.toLowerCase().includes('video')) {
+              return ['C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_vid789.mp4'];
+            }
+            return ['C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_abc123.png'];
+          },
+          ListAssetSandbox: async () => [
+            'C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_abc123.png',
+            'C:\\\\Users\\\\Test\\\\.moblend\\\\assets\\\\asset_def456.ttf',
+          ],
           GetDefaultTemplatePath: async () => 'C:\\\\TEMP\\\\m1_minimal_test.mo.blend',
           Reload: () => { window.location.reload(); },
           OpenDevTools: () => {},
@@ -47,16 +73,39 @@ export async function injectWailsMocks(page: Page, opts?: { brokerBase?: string 
         },
       },
     };
-    (window as any).runtime = {
-      OnFileDrop: () => {},
-      OnFileDropOff: () => {},
-      EventsEmit: () => {},
-      EventsOn: () => {},
+
+    const runtime = {
+      OnFileDrop: (cb: (x: number, y: number, paths: string[]) => void, _useDropTarget?: boolean) => {
+        (window as any).__moblendOnFileDrop = cb;
+      },
+      OnFileDropOff: () => {
+        delete (window as any).__moblendOnFileDrop;
+      },
+      EventsEmit: (eventName: string, ...data: unknown[]) => {
+        for (const cb of eventListeners[eventName] ?? []) cb(...data);
+      },
+      EventsOnMultiple: (eventName: string, callback: (...args: unknown[]) => void, _max?: number) => {
+        (eventListeners[eventName] ??= []).push(callback);
+        return () => {
+          eventListeners[eventName] = (eventListeners[eventName] ?? []).filter(f => f !== callback);
+        };
+      },
+      EventsOn: (eventName: string, callback: (...args: unknown[]) => void) =>
+        runtime.EventsOnMultiple(eventName, callback, -1),
+      EventsOnce: (eventName: string, callback: (...args: unknown[]) => void) =>
+        runtime.EventsOnMultiple(eventName, callback, 1),
       EventsOff: () => {},
+      EventsOffAll: () => {},
       LogPrint: console.log,
+    };
+    (window as any).runtime = runtime;
+    (window as any).__moblendEmitEvent = (eventName: string, ...data: unknown[]) => {
+      runtime.EventsEmit(eventName, ...data);
     };
   }, brokerBase);
 }
+
+export { MOCK_SANDBOX_PNG, MOCK_SANDBOX_LIST };
 
 export async function mockBroker(page: Page, state?: MockBrokerState) {
   const brokerState = state ?? createBrokerState();
@@ -76,7 +125,13 @@ export async function mockBroker(page: Page, state?: MockBrokerState) {
       return route.fulfill({ json: brokerState.health });
     }
     if (url.includes('/manifest')) {
-      return route.fulfill({ json: { ...brokerState.manifest, slots: brokerState.slots } });
+      const parameters = brokerState.manifest.parameters.map(p => ({
+        ...p,
+        default: brokerState.paramValues[p.id] ?? p.default,
+      }));
+      return route.fulfill({
+        json: { ...brokerState.manifest, parameters, slots: brokerState.slots },
+      });
     }
     if (url.includes('/project/load')) {
       brokerState.health.loaded = true;
@@ -84,7 +139,16 @@ export async function mockBroker(page: Page, state?: MockBrokerState) {
     }
     if (url.includes('/parameters')) {
       const updates = (body as { updates?: Array<{ id: string; value: unknown }> })?.updates ?? [];
-      for (const u of updates) brokerState.paramValues[u.id] = u.value;
+      for (const u of updates) {
+        brokerState.paramValues[u.id] = u.value;
+        const idx = brokerState.manifest.parameters.findIndex(p => p.id === u.id);
+        if (idx >= 0) {
+          brokerState.manifest.parameters[idx] = {
+            ...brokerState.manifest.parameters[idx],
+            default: u.value,
+          };
+        }
+      }
       brokerState.health.dirty = true;
       return route.fulfill({ json: { status: 'ok', applied: updates.length } });
     }

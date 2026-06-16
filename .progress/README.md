@@ -14,7 +14,7 @@ This folder is **tracked in git**. Do not add `.progress/` to `.gitignore`.
 
 | Segment | Format | Example |
 |---------|--------|---------|
-| `milestone` | `M` + the ROADMAP milestone number **zero-padded to three digits** (`M000` = M0, `M001` = M1, … `M006` = M6; adhoc `M0NN` if ROADMAP gains new milestones) | `M000`, `M002` |
+| `milestone` | `M` + the ROADMAP milestone number **zero-padded to three digits** (`M000` = M0, `M001` = M1, … `M006` = M6; adhoc `M0NN` if ROADMAP gains new milestones). **Sub-milestones** use a letter suffix without extra zero-padding (e.g. `M003a` for M3a). | `M000`, `M002`, `M003a` |
 | `index` | Three-digit zero-padded sequence **per milestone**, monotonic | `001`, `002`, `013` |
 | `descriptor` | Lowercase kebab-case summary of this entry | `websocket-viewport-spec` |
 

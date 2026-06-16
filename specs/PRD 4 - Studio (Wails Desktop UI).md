@@ -100,6 +100,7 @@ To prevent UI complexity creep, the application enforces a strict parameter-only
 ## **7\. System Configuration & Security**
 
 * **Config Files:** Advanced configuration (pointing the UI to a remote Mo.Blend cluster instead of localhost, or setting memory limits) is handled via the single canonical suite config file `<moblend_home>/config.json` — Windows `%USERPROFILE%\.moblend\config.json` (primary), Linux/macOS `~/.moblend/config.json`. This is the same file the engine and broker read (see PRD 1 §5 and PRD 3 §2.2). Edit it with any platform-appropriate text editor (Notepad/VS Code on Windows; `vi`/`nano` on Linux/macOS).  
+* **Local persistence (M3a):** Component-scoped SQLite indexes and a shared suite log live alongside `config.json` under `<moblend_home>/` (`studio.db`, `broker.db`, `suite_logs.db`). Metadata/cache only — not replacements for `config.json` or `.mo.blend` files. See [M3a — Local Persistence & Logging](M3a%20-%20Local%20Persistence%20%26%20Logging.md).  
 * **Process Watchdog:** If the Mo.Blend Studio app closes unexpectedly, the Go backend must send a kill signal to the local Mo.Blend headless process to prevent orphaned Blender instances from consuming system RAM in the background. Go `os/exec` and signal handling are responsible for monitoring this lifecycle.  
 * **Template Library Fetch:** When a user installs a template from the official library (`lib.moblend.dev` / PRD 7 registry), the Go backend streams the .mo.blend binary via `http.Get` to `~/.moblend/templates/`.
 

@@ -17,7 +17,11 @@ export function GetRecentProjects():Promise<Array<string>>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function ListAssetSandbox():Promise<Array<string>>;
+
 export function OpenDevTools():Promise<void>;
+
+export function PickAssetFile(arg1:string):Promise<string>;
 
 export function PickMoBlendFile():Promise<string>;
 

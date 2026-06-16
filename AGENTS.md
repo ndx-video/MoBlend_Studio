@@ -37,7 +37,7 @@ clients/obs/     # OBS browser dock (M5)
 clients/sentinel/# Sentinel UI (M6)
 specs/           # PRDs and API contract
 scripts/         # Dev orchestration (scripts/dev.ps1 on Windows)
-ROADMAP.md       # Milestone order (M0–M6)
+ROADMAP.md       # Milestone order (M0–M6, M3a persistence)
 .progress/       # Append-only progress log → .progress/AGENTS.md
 ```
 
@@ -62,6 +62,7 @@ ROADMAP.md       # Milestone order (M0–M6)
 | Viewport protocol | [PRD 3 §3.2](specs/PRD%203%20-%20Broker%20(MCP%20%26%20API%20Server).md) |
 | Desktop shell | [desktop/AGENTS.md](desktop/AGENTS.md) · PRD 4 §8–§13 · [specs/stitch/README.md](specs/stitch/README.md) |
 | Engine / bpy | [engine/AGENTS.md](engine/AGENTS.md) · PRD 1 · PRD 2 |
+| Local persistence (M3a) | [specs/M3a - Local Persistence & Logging.md](specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md) |
 
 ## Scoped configuration (load by address, not prose)
 
@@ -74,7 +75,21 @@ ROADMAP.md       # Milestone order (M0–M6)
 
 ## Milestone order
 
-Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 → M1 → M2 → M3 → M4 → M5 → M6.
+Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 → M1 → M2 → M3 → **M3a** → M4 → M5 → M6.
+
+## Local persistence (M3a+)
+
+Under `<moblend_home>/` (`%USERPROFILE%\.moblend\` on Windows):
+
+| File | Owner | Holds |
+|------|-------|-------|
+| `config.json` | Suite (human-editable) | Blender path, broker URL, shared settings |
+| `studio.db` | Studio Go only | Recents, asset index, install map (cache) |
+| `broker.db` | Broker Python only | Export jobs, catalog cache metadata |
+| `suite_logs.db` | Studio + broker (append) | Cross-suite `log_events` — not operational state |
+
+**Authoritative:** `.mo.blend`, `assets/`, `templates/` on disk — SQLite is index/cache only.  
+**New persistent state:** see decision table in [M3a spec](specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md) §9. No logging daemon in M3a.
 
 ## Global conventions
 

@@ -14,6 +14,7 @@ export const M1_MANIFEST = {
     { id: 'enabled', type: 'bool', label: 'Enabled', node_target: 'M1TestGroup', socket_identifier: 's3', default: false },
     { id: 'count', type: 'int', label: 'Count', node_target: 'M1TestGroup', socket_identifier: 's4', default: 7, min: 0, max: 20 },
     { id: 'style_preset', type: 'enum', label: 'Style Preset', node_target: 'M1TestGroup', socket_identifier: 's5', default: 'glitch', options: ['plain', 'neon', 'glitch'] },
+    { id: 'logo', type: 'image', label: 'Logo', node_target: 'M1TestGroup', socket_identifier: 's6', default: '' },
   ],
   slots: [
     { index: 0, label: 'Intro', start_time: 0, end_time: 2.0 },
