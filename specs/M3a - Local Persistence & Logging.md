@@ -207,7 +207,7 @@ Do not add a logging daemon unless ROADMAP explicitly adds M3b or a future obser
 |-------|--------|
 | M3a+ ingest | Studio Go `POST /internal/log` on secondary localhost port; sole SQLite writer for logs |
 | Headless-only runs | Optional `moblend-logd` when broker runs without Studio |
-| M4 | Populate `installed_templates` + `catalog_cache` from `index.json` |
+| M4a–M4d | Populate `installed_templates` + `catalog_cache` from `index.json` — see [M4 — Registry Integration](M4%20-%20Registry%20Integration.md) |
 | Retention | Prune `log_events` older than N days (configurable in `config.json`) |
 
 ---

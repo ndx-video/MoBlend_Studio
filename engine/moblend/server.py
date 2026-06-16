@@ -30,10 +30,11 @@ from typing import Any
 
 import bpy  # type: ignore[import-not-found]
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from . import catalog
 from . import engine
 from . import log as moblend_log
 from .store import BrokerDB, moblend_home, open_broker_db
@@ -448,11 +449,18 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
                 pass
         return st
 
+    def _catalog_db() -> BrokerDB:
+        if _broker_db is not None:
+            return _broker_db
+        return open_broker_db(moblend_home())
+
     @app.get("/api/v1/templates")
-    def list_templates() -> list[dict[str, Any]]:
-        # M2 stub. Real cached index.json fetch from lib.moblend.dev / mbl-registry is M4 work.
-        # Returning [] keeps the endpoint "responding correctly" and unblocks clients that call it early.
-        return []
+    def list_templates(refresh: bool = Query(False)) -> list[dict[str, Any]]:
+        return catalog.fetch_catalog(moblend_home(), _catalog_db(), force=refresh)
+
+    @app.post("/api/v1/templates/refresh")
+    def refresh_templates() -> list[dict[str, Any]]:
+        return catalog.fetch_catalog(moblend_home(), _catalog_db(), force=True)
 
     # --- Binary viewport WebSocket (exact wire per PRD 3 §3.2) ---
     @app.websocket("/api/v1/viewport/stream")

@@ -23,8 +23,8 @@ Host Python may import for static analysis only—not for bpy execution.
 ```
 engine/
 ├── bootstrap.py       # Entry: --serve, --load, --set, --save
-├── moblend/           # load_template, set_parameter, save_project, manifest, nodes
-└── tests/             # m1_roundtrip, m2_broker_client, m2_viewport_tester.html
+├── moblend/           # load_template, set_parameter, save_project, manifest, nodes, catalog
+└── tests/             # m1_roundtrip, m2_broker_client, m4_catalog_test, m2_viewport_tester.html
 ```
 
 ## Verification
@@ -33,7 +33,8 @@ After engine changes, run `/engine-verify` or the commands in [engine/README.md]
 
 ## Persistence (M3a)
 
-- **`broker.db`** — broker-owned index: `export_jobs`, `catalog_cache` stub. Package: `engine/moblend/store.py`.
+- **`broker.db`** — broker-owned index: `export_jobs`, `catalog_cache` metadata. Package: `engine/moblend/store.py`.
+- **Catalog cache (M4b)** — `engine/moblend/catalog.py` fetches `index.json` from `registryBaseUrl` (or `catalogFixturePath`), writes body to `<moblend_home>/catalog/index.json`, metadata to `catalog_cache`. `GET /api/v1/templates` returns the flattened `templates` array.
 - **`suite_logs.db`** — shared append-only logs via `engine/moblend/log.py` (`component=broker`). WAL + short transactions.
 - Never store manifest JSON, bpy session state, or frames in SQLite. See [M3a spec](../specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md).
 

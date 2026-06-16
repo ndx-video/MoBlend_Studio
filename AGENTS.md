@@ -14,7 +14,7 @@ Mo.Blend is a **Python + Go monorepo** that wraps headless Blender as a parametr
 | OBS client | Static HTML/JS in CEF | 5 |
 | Sentinel client | MCP chat + canvas | 6 |
 
-**External repos:** `moblend-registry` (PRD 7), `MoBlend_TemplateInspector` (PRD 8).
+**External repos:** `MoBlend_Lib` (v1 template library, sibling repo), `moblend-registry` (PRD 7 long-term), `MoBlend_TemplateInspector` (PRD 8).
 
 **Public sites:** [moblend.dev](https://moblend.dev); [lib.moblend.dev](https://lib.moblend.dev).
 
@@ -63,6 +63,7 @@ ROADMAP.md       # Milestone order (M0–M6, M3a persistence)
 | Desktop shell | [desktop/AGENTS.md](desktop/AGENTS.md) · PRD 4 §8–§13 · [specs/stitch/README.md](specs/stitch/README.md) |
 | Engine / bpy | [engine/AGENTS.md](engine/AGENTS.md) · PRD 1 · PRD 2 |
 | Local persistence (M3a) | [specs/M3a - Local Persistence & Logging.md](specs/M3a%20-%20Local%20Persistence%20%26%20Logging.md) |
+| Registry integration (M4) | [specs/M4 - Registry Integration.md](specs/M4%20-%20Registry%20Integration.md) · slices M4a–M4d |
 
 ## Scoped configuration (load by address, not prose)
 
@@ -75,7 +76,7 @@ ROADMAP.md       # Milestone order (M0–M6, M3a persistence)
 
 ## Milestone order
 
-Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 → M1 → M2 → M3 → **M3a** → M4 → M5 → M6.
+Build bottom-up per [ROADMAP.md](ROADMAP.md): M0 → M1 → M2 → M3 → **M3a** → **M4** (M4a → M4b → M4c → M4d) → M5 → M6.
 
 ## Local persistence (M3a+)
 

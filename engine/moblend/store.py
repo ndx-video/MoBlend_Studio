@@ -73,6 +73,40 @@ class BrokerDB:
                     (version, _utc_now_iso()),
                 )
 
+    def get_catalog_cache(self) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT fetched_at, etag, source_url, body_hash FROM catalog_cache WHERE id = 1"
+        ).fetchone()
+        if row is None:
+            return None
+        return {
+            "fetched_at": row[0],
+            "etag": row[1],
+            "source_url": row[2],
+            "body_hash": row[3],
+        }
+
+    def upsert_catalog_cache(
+        self,
+        *,
+        source_url: str,
+        body_hash: str,
+        etag: str | None = None,
+        fetched_at: str | None = None,
+    ) -> None:
+        now = fetched_at or _utc_now_iso()
+        with self.conn:
+            self.conn.execute(
+                """INSERT INTO catalog_cache (id, fetched_at, etag, source_url, body_hash)
+                   VALUES (1, ?, ?, ?, ?)
+                   ON CONFLICT(id) DO UPDATE SET
+                     fetched_at = excluded.fetched_at,
+                     etag = excluded.etag,
+                     source_url = excluded.source_url,
+                     body_hash = excluded.body_hash""",
+                (now, etag, source_url, body_hash),
+            )
+
     def upsert_export_job(
         self,
         job_id: str,

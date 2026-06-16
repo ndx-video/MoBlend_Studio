@@ -23,7 +23,8 @@ The Mo.Blend ecosystem spans one core monorepo and two external repositories:
 | Repository | PRD(s) | Relationship |
 |------------|--------|--------------|
 | `MoBlend_Studio` (this repo) | 1–6 | Python/Go monorepo: headless engine, API broker, Wails desktop, OBS and Sentinel clients |
-| `moblend-registry` | 7 | Separate GitOps repo (source of truth + CI for templates); backs the official public template library at `lib.moblend.dev` |
+| `MoBlend_Lib` | 7 (v1) | Sibling repo — v1 template library backing `lib.moblend.dev` during beta |
+| `moblend-registry` | 7 (long-term) | GitOps naming in PRD 7; may supersede or alias `MoBlend_Lib` post-beta |
 | `MoBlend_TemplateInspector` | 8 | Separate Blender addon repo for template authors; publishes to the registry (lib.moblend.dev) |
 
 ```
@@ -55,6 +56,8 @@ Each row links to the authoritative spec. Summaries here are intentionally brief
 | — | [Mo.Blend API & Function Spec](Mo.Blend%20API%20%26%20Function%20Spec.md) | Engine API, REST/WebSocket broker contract, MCP tools. |
 | — | [manifest.schema.json](manifest.schema.json) | Canonical `.mo.blend` manifest schema. |
 | M3a | [M3a — Local Persistence & Logging](M3a%20-%20Local%20Persistence%20%26%20Logging.md) | SQLite under `<moblend_home>/`: `studio.db`, `broker.db`, `suite_logs.db`; one-shot impl prompt §11. |
+| M4 | [M4 — Registry Integration](M4%20-%20Registry%20Integration.md) | Template library client integration; sliced M4a–M4d. |
+| — | [catalog.schema.json](catalog.schema.json) | Canonical `index.json` catalog schema (library + broker). |
 
 ### **PRD 1 — Blender Headless Base Compute**
 

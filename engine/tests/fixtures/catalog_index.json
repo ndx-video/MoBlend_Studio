@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-06-16T12:00:00Z",
+  "base_url": "https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main",
+  "templates": [
+    {
+      "template_id": "parametric-cube-demo",
+      "name": "Parametric Cube Demo",
+      "category": "demo",
+      "description": "Minimal parametric cube template for M4 bootstrap.",
+      "version": "1.0.0",
+      "preview_url": "https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main/templates/demo/parametric-cube-demo/parametric-cube-demo.webp",
+      "manifest_url": "https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main/templates/demo/parametric-cube-demo/parametric-cube-demo.manifest.json",
+      "download_url": "https://raw.githubusercontent.com/ndx-video/MoBlend_Lib/main/templates/demo/parametric-cube-demo/parametric-cube-demo.mo.blend"
+    }
+  ]
+}
