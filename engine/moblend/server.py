@@ -37,6 +37,8 @@ from pydantic import BaseModel, Field
 from . import catalog
 from . import engine
 from . import log as moblend_log
+from .mcp_server import mount_mcp_tools
+from .mcp_tools import BrokerToolContext
 from .store import BrokerDB, moblend_home, open_broker_db
 
 # -------------------------------------------------------------------
@@ -294,6 +296,8 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
             "https://localhost",
             "http://127.0.0.1",
             "https://127.0.0.1",
+            "http://127.0.0.1:8080",
+            "http://localhost:8080",
         ],
         allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|wails\.localhost)(:\d+)?",
         allow_credentials=False,
@@ -456,7 +460,14 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
 
     @app.get("/api/v1/templates")
     def list_templates(refresh: bool = Query(False)) -> list[dict[str, Any]]:
-        return catalog.fetch_catalog(moblend_home(), _catalog_db(), force=refresh)
+        home = moblend_home()
+        try:
+            return catalog.fetch_catalog(home, _catalog_db(), force=refresh)
+        except Exception as ex:
+            cached = catalog.load_cached_catalog(home)
+            if cached:
+                return cached
+            raise _error("catalog_error", str(ex), 500)
 
     @app.post("/api/v1/templates/refresh")
     def refresh_templates() -> list[dict[str, Any]]:
@@ -593,6 +604,19 @@ def create_app(action_q: queue.Queue[BrokerTask]) -> FastAPI:
             session_closed.set()
             reader_task.cancel()
             processor_task.cancel()
+
+    def _enqueue_task(task: BrokerTask) -> None:
+        try:
+            action_q.put(task, timeout=0.05)
+        except queue.Full:
+            raise _error("queue_full", "Action queue is full (backpressure)", 429)
+
+    mcp_ctx = BrokerToolContext(
+        enqueue=_enqueue_task,
+        task_factory=lambda op, args: BrokerTask(op=op, args=args),
+        catalog_db=_catalog_db,
+    )
+    mount_mcp_tools(app, mcp_ctx)
 
     # OpenAPI /docs is automatically available — extremely useful for M2/M3.
 

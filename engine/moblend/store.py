@@ -141,7 +141,8 @@ def open_broker_db(home_dir: Path | str | None = None) -> BrokerDB:
     home = Path(home_dir) if home_dir is not None else moblend_home()
     home.mkdir(parents=True, exist_ok=True)
     path = home / "broker.db"
-    conn = sqlite3.connect(str(path), timeout=5.0)
+    # REST/MCP handlers run on uvicorn threads; bpy timer uses the same DB.
+    conn = sqlite3.connect(str(path), timeout=5.0, check_same_thread=False)
     _apply_pragmas(conn)
     db = BrokerDB(home_dir=home, conn=conn)
     db.migrate()
