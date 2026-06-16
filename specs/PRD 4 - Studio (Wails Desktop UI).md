@@ -50,8 +50,10 @@ To remove guesswork and streamline user onboarding, Mo.Blend Studio includes a d
   * Mo.Blend Python Engine (PRD 2).  
   * API Broker / MCP Server (PRD 3).  
   * Official Template Library (`lib.moblend.dev`, PRD 7).  
+  * **Sentinel harness + ndx.moblend kit** (PRD 6, external `MoBlend_SRE`) — optional; user-configured URL, not auto-installed by Studio.  
 * **Automated Setup:** Provides one-click installation or updating of the Python Engine and API Broker components from the monorepo (dev) or bundled release artifacts.  
 * **Health Checks:** Runs diagnostic checks to ensure the headless Blender instance can be successfully launched and the API port (8000) is available.  
+* **Sentinel kit checks (future):** When the user sets `sentinelKitUrl` in `config.json` (see §7), Suite Manager probes the harness (`GET {origin}/hl`) and confirms the `ndx.moblend` kit is listed (`GET {origin}/hl/kt`). Results drive a status card and whether the Studio nav exposes the Sentinel embed route (§9).  
 * **Component Explanations:** Includes clear, concise tooltips and documentation within the UI explaining what each component does, demystifying the architecture for casual users.
 
 ## **5\. UI/UX Paradigm: The "No Nodes" Policy**
@@ -100,6 +102,7 @@ To prevent UI complexity creep, the application enforces a strict parameter-only
 ## **7\. System Configuration & Security**
 
 * **Config Files:** Advanced configuration (pointing the UI to a remote Mo.Blend cluster instead of localhost, or setting memory limits) is handled via the single canonical suite config file `<moblend_home>/config.json` — Windows `%USERPROFILE%\.moblend\config.json` (primary), Linux/macOS `~/.moblend/config.json`. This is the same file the engine and broker read (see PRD 1 §5 and PRD 3 §2.2). Edit it with any platform-appropriate text editor (Notepad/VS Code on Windows; `vi`/`nano` on Linux/macOS).  
+* **Sentinel kit URL (future, PRD 6 embed):** Optional string `sentinelKitUrl` — full HTTP URL to the running kit page (default dev example: `http://127.0.0.1:8080/kt/ndx/moblend/`). Configured in Suite Manager; empty means Studio hides the Sentinel nav entry. Studio does not spawn the Sentinel harness — the user runs `MoBlend_SRE` separately (or a remote harness). Go validates reachability before exposing the embed route.
 * **Local persistence (M3a):** Component-scoped SQLite indexes and a shared suite log live alongside `config.json` under `<moblend_home>/` (`studio.db`, `broker.db`, `suite_logs.db`). Metadata/cache only — not replacements for `config.json` or `.mo.blend` files. See [M3a — Local Persistence & Logging](M3a%20-%20Local%20Persistence%20%26%20Logging.md).  
 * **Process Watchdog:** If the Mo.Blend Studio app closes unexpectedly, the Go backend must send a kill signal to the local Mo.Blend headless process to prevent orphaned Blender instances from consuming system RAM in the background. Go `os/exec` and signal handling are responsible for monitoring this lifecycle.  
 * **Template Library Fetch:** When a user installs a template from the official library (`lib.moblend.dev` / PRD 7 registry), the Go backend streams the .mo.blend binary via `http.Get` to `~/.moblend/templates/`.
@@ -154,8 +157,11 @@ Mo.Blend Studio is built iteratively. Stitch exports under [`specs/stitch/`](sti
 | [`screen_assets`](stitch/screen_assets/) | `/assets` | List sandbox files via Go; wire ingest when API exists | Registry assets |
 | [`screen_export`](stitch/screen_export/) | `/export` | UI shell; disabled or 501 message until export API | Full encode pipeline |
 | [`screen_user-settings`](stitch/screen_user-settings/) | `/settings` | Read/write `~/.moblend/config.json` via Go | Remote cluster UI |
+| *(future — no Stitch export yet)* | `/sentinel` | Full-viewport `<iframe src={sentinelKitUrl}>` when Suite Manager checks pass | Requires M5 kit + `sentinelKitUrl` in config |
 
 **Note:** The original [Stitch prompt](stitch-prompt.txt) specified four screens (Home/Gallery, Editor, Export, Suite Manager). The repo contains **seven** exports—Projects, Assets, and User Settings were added during design. All seven are first-class routes; do not fold them into modals without updating this table.
+
+**Sentinel embed (future):** The `/sentinel` route is a thin Studio shell around the **external** ndx.moblend React kit served by a Sentinel harness. It is **not** a second implementation of PRD 6 inside the monorepo — iframe only. The nav-rail icon appears only after Go reports `sentinelKitReady` (see §13.3).
 
 Screen index for agents: [`specs/stitch/README.md`](stitch/README.md).
 
@@ -318,8 +324,9 @@ These may land in **M3 engine sub-phases** before Wails UI catches up:
 ### **13.3 Future iterations (post-M3)**
 
 * **M4:** Gallery from `lib.moblend.dev`, `InstallTemplate`, live `GET /templates`.
-* **M5:** Export presets overlap OBS transparent WebM path—share broker export where possible.
-* **M6:** Sentinel may reuse React viewport/param components; packaging TBD (standalone vs Wails route).
+* **M5:** Sentinel SRE / Kit may reuse React viewport/param components; broker MCP tools evolve with Kit needs; agent skills live in `MoBlend_SRE`.
+* **Post-M5 — Studio Sentinel embed:** New `/sentinel` route: single full-area `<iframe>` to user-configured `sentinelKitUrl` (Suite Manager). Go binding `CheckSentinelKit()` runs sanity checks before the nav item is shown: (1) `sentinelKitUrl` set and parseable, (2) harness `GET /hl` healthy, (3) `GET /hl/kt` lists `ndx.moblend`, (4) broker `GET /api/v1/health` OK (kit shares the same engine). Re-check on Suite Manager refresh and periodically while Studio is open. Wails WebView2 must allow iframe to loopback (or configured LAN origin); kit/harness may need embed-friendly headers (coordinate with `MoBlend_SRE`). No duplicate PRD 6 UI in `desktop/frontend/` — embed only.
+* **M6:** Export presets overlap OBS transparent WebM path—share broker export where possible; canonical OBS UI in `MoBlend_OBS`.
 * **Cross-platform:** Linux/macOS Go spawn and signal handling after Windows MVP stable.
 * **Slot math** lives in template geometry nodes (PRD 2)—Studio only sends seconds/preset_id; never expose node graphs (§5).
 

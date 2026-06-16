@@ -1,7 +1,9 @@
-# Sentinel Kit UI
+# Sentinel SRE and ndx.moblend Kit (stub)
 
-MCP chat + canvas client (PRD 6).
+Canonical source lives in the sibling repo **`MoBlend_SRE`** — not this directory.
 
-**Milestone:** M6 (placement TBD — may move inside Wails later).
+MCP chat + canvas client, SRE garage, and ndx.moblend Kit authoring workspace (PRD 6). Agent skills for broker/Kit workflows live in the SRE repo.
 
-See [PRD 6](../../specs/PRD%206%20-%20Sentinel%20Kit%20UI.md) and the root [ROADMAP.md](../../ROADMAP.md).
+**Milestone:** M5
+
+See [PRD 6](../../specs/PRD%206%20-%20Sentinel%20Kit%20UI.md), [ROADMAP.md](../../ROADMAP.md) § M5, and the canonical spec [MoBlend_SRE/specs/ndx.moblend.kit.md](../../../MoBlend_SRE/specs/ndx.moblend.kit.md).

@@ -14,7 +14,7 @@ Mo.Blend is a **Python + Go monorepo** that wraps headless Blender as a parametr
 | OBS client | Static HTML/JS in CEF | 5 |
 | Sentinel client | MCP chat + canvas | 6 |
 
-**External repos:** `MoBlend_Lib` (v1 template library, sibling repo), `moblend-registry` (PRD 7 long-term), `MoBlend_TemplateInspector` (PRD 8).
+**External repos:** `MoBlend_Lib` (v1 template library), `moblend-registry` (PRD 7 long-term), `MoBlend_SRE` (Sentinel SRE + Kit — M5), `MoBlend_OBS` (OBS panel — M6), `MoBlend_TemplateInspector` (PRD 8 addon).
 
 **Public sites:** [moblend.dev](https://moblend.dev); [lib.moblend.dev](https://lib.moblend.dev).
 
@@ -33,8 +33,8 @@ Keep platform-specific code in Go (`desktop/`) and Python bootstrap—not in sha
 ```
 engine/          # Python: bootstrap, moblend engine, FastAPI broker → engine/AGENTS.md
 desktop/         # Wails: Go backend + frontend/ → desktop/AGENTS.md
-clients/obs/     # OBS browser dock (M5)
-clients/sentinel/# Sentinel UI (M6)
+clients/obs/     # Stub → MoBlend_OBS (M6)
+clients/sentinel/# Stub → MoBlend_SRE (M5)
 specs/           # PRDs and API contract
 scripts/         # Dev orchestration (scripts/dev.ps1 on Windows)
 ROADMAP.md       # Milestone order (M0–M6, M3a persistence)

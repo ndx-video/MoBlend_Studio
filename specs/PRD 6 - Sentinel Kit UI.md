@@ -6,7 +6,9 @@ To provide a specialized, highly interactive chat-and-canvas interface where use
 
 The agent queries available .mo.blend templates, maps semantic user requests to strict mathematical parameters, and orchestrates headless Blender renders behind the scenes. This UI bridges the gap between creative ideation and technical execution, allowing marketers, streamers, and casual designers to conjure complex 3D animations without ever seeing a node graph or keyframe timeline.
 
-**Deployment:** The Sentinel Kit UI will live under `clients/sentinel/` in the `MoBlend_Studio` monorepo. Exact packaging (standalone web app vs. Wails route/tab) is TBD — see [ROADMAP.md](../ROADMAP.md) milestone M6.
+**Deployment:** Canonical source lives in the sibling repo **`MoBlend_SRE`** (Sentinel SRE + ndx.moblend Kit). `MoBlend_Studio/clients/sentinel/` is a stub pointer only. Agent skills for Kit authoring and broker/MCP client adapters live in the SRE repo — see [ROADMAP.md](../ROADMAP.md) milestone M5.
+
+**Mo.Blend Studio embed (future):** After M5, Studio gains an optional `/sentinel` route that is **only an iframe** to a user-configured Sentinel harness URL (`sentinelKitUrl` in `~/.moblend/config.json`, set via Suite Manager). Studio does not host the kit React app natively in v1 of this integration — it embeds the same kit page served at `/kt/ndx/moblend/`. The nav entry and iframe mount only when Suite Manager sanity checks pass (harness health, kit discovery, broker health). See [PRD 4 §4, §9, §13.3](PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md).
 
 ## **2\. Core Architecture & Hybrid Networking**
 
@@ -88,3 +90,18 @@ Integration with audio transcription agents. The user uploads a voiceover track;
 ### **5.3 Cross-Platform Agent Handoff**
 
 Because the Mo.Blend ecosystem is highly interconnected via the API Broker, the Sentinel Kit UI could seamlessly hand off completed assets to other tools. For example, a streamer could finalize a graphic in the chat UI, and simply tell the agent: *"Push this to OBS."* The agent would trigger the Mo.Blend API to render the WebM, and simultaneously call an OBS WebSocket tool to inject the new media source directly into the broadcaster's live scene.
+
+### **5.4 Mo.Blend Studio iframe shell**
+
+A future Studio iteration adds a first-class entry point without duplicating the kit UI in Wails:
+
+* **Configuration:** `sentinelKitUrl` in `<moblend_home>/config.json` (edited through Suite Manager). Example: `http://127.0.0.1:8080/kt/ndx/moblend/`. Empty → Studio behaves as today (no Sentinel nav item).
+* **Sanity checks (gate the button):** Before showing the nav-rail control or enabling `/sentinel`, Studio Go (or a dedicated binding) verifies:
+  1. `sentinelKitUrl` is non-empty and a valid `http`/`https` URL.
+  2. Harness health: `GET {origin}/hl` returns OK.
+  3. Kit presence: `GET {origin}/hl/kt` includes the `ndx.moblend` kit.
+  4. Shared broker: `GET /api/v1/health` on the Studio broker URL succeeds (kit and Studio use the same headless engine).
+  5. *(Stretch)* `GET` or `HEAD` on `sentinelKitUrl` returns 2xx (page reachable).
+* **UI:** Route `/sentinel` renders `AppShell` chrome with a single borderless `<iframe src={sentinelKitUrl}>` filling the content region — no Studio nav inside the iframe. Optional slim header: “Connected to Sentinel” + link to open kit URL in system browser.
+* **Failure UX:** If checks fail after the user configured a URL, Suite Manager shows the failing step; nav item stays hidden or shows disabled state with tooltip.
+* **Security:** Default `sentinelKitUrl` is loopback. Remote harness URLs require the same trust model as `--bind-public` on the broker (user explicitly configures both). Document mixed-content and `X-Frame-Options` if harness hardens embed headers.

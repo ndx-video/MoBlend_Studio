@@ -6,7 +6,9 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 **Platforms:** Windows (primary dev target) · Linux · macOS Apple Silicon (parity as needed)
 
-**External repos:** `MoBlend_Lib` (v1 template library — sibling repo) · `moblend-registry` (PRD 7 long-term name) · `MoBlend_TemplateInspector` (PRD 8)
+**External repos:** `MoBlend_Lib` (v1 template library) · `moblend-registry` (PRD 7 long-term name) · `MoBlend_SRE` (Sentinel SRE + ndx.moblend Kit — M5) · `MoBlend_OBS` (OBS panel — M6) · `MoBlend_TemplateInspector` (PRD 8 addon)
+
+**Monorepo client stubs:** `clients/sentinel/` and `clients/obs/` remain lightweight pointers to the external repos — not the canonical source tree.
 
 **Public sites:** `moblend.dev` (news / info / docs) · `lib.moblend.dev` (official template library)
 
@@ -177,39 +179,85 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 ---
 
-## M5 — OBS Panel
+## M5 — Sentinel SRE and ndx.moblend Kit
 
-**Goal:** OBS browser dock: pick template, quick edit, render transparent `.webm`, inject into scene.
+**Goal:** Sentinel SRE garage + ndx.moblend Kit: MCP chat-and-canvas for natural-language template iteration, and an agent workspace where users park an LLM to author Kit assets (Lua, YAML, JSON, Go templates, JS, CSS, etc.) against the Mo.Blend broker API.
 
-**PRD refs:** [PRD 5](specs/PRD%205%20-%20OBS%20Extension%20Panel.md)
+**Repo:** Sibling [`MoBlend_SRE`](../MoBlend_SRE) (not this monorepo). `clients/sentinel/` here is a stub pointer only.
 
-**Done when:**
+**Spec:** [ndx.moblend Kit — M5 slices](../MoBlend_SRE/specs/ndx.moblend.kit.md) (parent index + one-shot prompts in `MoBlend_SRE/specs/`)
 
-- Static panel under `clients/obs/` loads in OBS Custom Browser Dock
-- Render & inject pipeline: `POST /render/export` → obs-websocket media source → playback
-- Temp file cleanup after playback
-
-**Out of scope:** Mo.Blend Studio UI changes; registry authoring
-
----
-
-## M6 — Sentinel Kit UI
-
-**Goal:** MCP client + chat-and-canvas for natural-language template iteration.
+**Harness:** `../sentinel/sndev.exe harness start -d -p ../MoBlend_SRE --mcp` — see [Sentinel docs](../sentinel/docs/README.md)
 
 **PRD refs:** [PRD 6](specs/PRD%206%20-%20Sentinel%20Kit%20UI.md)
+
+**Monorepo companions:** Expect iterative broker/engine work in `MoBlend_Studio` as Kit and SRE needs surface (MCP tool coverage, export paths, catalog reads). Foundational components evolve alongside client milestones — not a frozen platform handoff.
 
 **Done when:**
 
 - MCP tool loop: list templates → inspect → apply parameters → preview on canvas
 - Chat history + current manifest state kept in sync; delta updates work
 - JSON diff inspector shows parameter changes
+- SRE garage can scaffold/edit ndx.moblend Kit modules that call broker REST/MCP against a local headless engine
+- **Agent skills investigation (M5 slice):** evaluate open-source Blender MCP/skill patterns (e.g. [Blender Lab MCP](https://www.blender.org/lab/mcp-server/), [blender-ai-mcp](https://github.com/PatrykIti/blender-ai-mcp), [blender-mcp](https://github.com/ahujasid/blender-mcp)) and document what to **adapt** vs **reject** for Mo.Blend; ship initial `SKILL.md` guidance in the SRE repo
 
-**Blocked on:** M2 (API + stream)
+**Agent skills ownership:** Skills live in **`MoBlend_SRE`** — the garage where agents write Kit code. The monorepo broker implements authoritative `moblend_*` MCP tools and REST; the SRE repo hosts client-side skills, broker/MCP adapters, and Kit-authoring workflows. Do **not** port generic “open Blender UI + socket addon” MCP stacks wholesale — they assume interactive bpy and conflict with headless manifest-only compute (PRD 1–2). Raw scene-graph manipulation skills belong in **`MoBlend_TemplateInspector`** (PRD 8) for template authors, not Sentinel end-users.
 
-**TBD:** Packaging — standalone under `clients/sentinel/` vs. route inside Wails app. Decide before starting M6.
+**Out of scope:** Custom LLM hosting; cloud render farm; OBS render-and-inject (M6)
 
-**Out of scope:** Custom LLM hosting; cloud render farm
+### M5a — SRE Bootstrap & Kit Scaffold
+
+**Repo:** `MoBlend_SRE` · **Prompt:** [ndx.moblend.kit.md § M5a](../MoBlend_SRE/specs/ndx.moblend.kit.md#m5a--sre-bootstrap--kit-scaffold)
+
+**Done when:** `ndx.moblend/` kit discovered by harness; dev loop verified with `sndev.exe`
+
+### M5b — Mo.Blend Broker Connector & Core Flows
+
+**Repo:** `MoBlend_SRE/ndx.moblend/` · **Prompt:** [§ M5b](../MoBlend_SRE/specs/ndx.moblend.kit.md#m5b--moblend-broker-connector--core-flows)
+
+**Done when:** Lua connector + list/inspect/apply flows work against live broker
+
+### M5c — Agent Skills Pack & Blender MCP Research
+
+**Repo:** `MoBlend_SRE/.claude/skills/` · **Prompt:** [§ M5c](../MoBlend_SRE/specs/ndx.moblend.kit.md#m5c--agent-skills-pack--blender-mcp-research)
+
+**Done when:** Skills shipped; `specs/blender-mcp-research.md` adapt/reject doc complete
+
+### M5d — React GUI Kit (Studio design parity)
+
+**Repo:** `MoBlend_SRE/ndx.moblend/ui/` → `pb/app/` · **Prompt:** [§ M5d](../MoBlend_SRE/specs/ndx.moblend.kit.md#m5d--react-gui-kit-studio-design-parity)
+
+**Done when:** React SPA at `/kt/ndx/moblend/` cherry-picks Studio tokens, viewport hook, manifest form; visual QA vs `specs/stitch/screen_edit`
+
+### M5e — State Sync & JSON Diff Inspector
+
+**Repo:** `MoBlend_SRE/ndx.moblend/` · **Prompt:** [§ M5e](../MoBlend_SRE/specs/ndx.moblend.kit.md#m5e--state-sync--json-diff-inspector)
+
+**Done when:** Manifest diff panel + state sync per PRD 6 §2.3, §3.3
+
+**Progress files:** Use `M005` for parent; sub-slices `M005a` … `M005e` (e.g. `M005a.001.sre-kit-scaffold.md`).
+
+**Future (post-M5, monorepo): Studio Sentinel embed** — Optional Wails route `/sentinel`: full-viewport `<iframe>` to user-configured `sentinelKitUrl` (`~/.moblend/config.json`, edited in Suite Manager). Nav-rail button appears only after Go sanity checks: harness `GET /hl`, kit listed on `GET /hl/kt` (`ndx.moblend`), broker `GET /api/v1/health`. Studio does not re-implement PRD 6 UI. See [PRD 4 §13.3](specs/PRD%204%20-%20Studio%20(Wails%20Desktop%20UI).md#133-future-iterations-post-m3), [PRD 6 §5.4](specs/PRD%206%20-%20Sentinel%20Kit%20UI.md#54-moblend-studio-iframe-shell), [MoBlend_SRE spec §10](../MoBlend_SRE/specs/ndx.moblend.kit.md#10-future--moblend-studio-iframe-embed-post-m5).
+
+---
+
+## M6 — OBS Panel
+
+**Goal:** OBS browser dock: pick template, quick edit, render transparent `.webm`, inject into scene.
+
+**Repo:** Sibling [`MoBlend_OBS`](../MoBlend_OBS) (not this monorepo). `clients/obs/` here is a stub pointer only.
+
+**PRD refs:** [PRD 5](specs/PRD%205%20-%20OBS%20Extension%20Panel.md)
+
+**Monorepo companions:** Broker export job API, alpha WebM path, and optional `--bind-public` + bearer-token hardening may need iteration as the OBS repo integrates.
+
+**Done when:**
+
+- Static panel loads in OBS Custom Browser Dock
+- Render & inject pipeline: `POST /render/export` → obs-websocket media source → playback
+- Temp file cleanup after playback
+
+**Out of scope:** Mo.Blend Studio UI changes; registry authoring; Sentinel SRE / Kit (M5)
 
 ---
 
@@ -227,7 +275,7 @@ Lightweight milestone plan for the `MoBlend_Studio` monorepo. PRDs in `[specs/](
 
 ## Current focus
 
-**Next slice:** [M5 — OBS Panel](#m5--obs-panel)
+**Next slice:** [M5 — Sentinel SRE and ndx.moblend Kit](#m5--sentinel-sre-and-ndxmoblend-kit)
 
 ---
 

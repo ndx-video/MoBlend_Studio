@@ -2,7 +2,7 @@
 
 **Status:** Planned (sliced into **M4a → M4b → M4c → M4d**)  
 **Roadmap:** [ROADMAP.md § M4](../ROADMAP.md#m4--registry-integration)  
-**Placement:** After M3a Local Persistence, before M5 OBS Panel
+**Placement:** After M3a Local Persistence, before M5 Sentinel SRE / Kit
 
 ## 1. Objective
 

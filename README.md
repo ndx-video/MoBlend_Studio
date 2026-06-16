@@ -15,8 +15,8 @@ Mo.Blend is a small set of cooperating components (codenames in **bold**). The *
 | **Platform** | 2 | Python engine inside headless Blender — parses manifests, mutates nodes, drives the slot timeline. |
 | **Broker** | 3 | FastAPI/MCP server (REST control plane + binary WebSocket viewport) on `127.0.0.1:8000`. |
 | **Studio** | 4 | Wails v2 desktop app — the casual-user, no-nodes editor. |
-| **OBS Panel** | 5 | OBS CEF dock for render-and-inject broadcast graphics. |
-| **Sentinel** | 6 | MCP chat-and-canvas workspace where an LLM acts as a virtual technical artist. |
+| **Sentinel SRE / Kit** | 6 | MCP chat-and-canvas + ndx.moblend Kit garage (`MoBlend_SRE`, M5). |
+| **OBS Panel** | 5 | OBS CEF dock for render-and-inject broadcast graphics (`MoBlend_OBS`, M6). |
 | **Registry** | 7 | `moblend-registry` (GitOps) powering the official template library at `lib.moblend.dev`. |
 | **Template Inspector** | 8 | `MoBlend_TemplateInspector` — external Blender authoring addon. |
 

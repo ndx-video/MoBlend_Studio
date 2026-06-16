@@ -18,22 +18,24 @@ Cross-platform APIs (REST, binary WebSocket on `127.0.0.1:8000`) are identical; 
 
 ## **Repository Map**
 
-The Mo.Blend ecosystem spans one core monorepo and two external repositories:
+The Mo.Blend ecosystem spans one core monorepo and several external repositories:
 
-| Repository | PRD(s) | Relationship |
-|------------|--------|--------------|
-| `MoBlend_Studio` (this repo) | 1–6 | Python/Go monorepo: headless engine, API broker, Wails desktop, OBS and Sentinel clients |
-| `MoBlend_Lib` | 7 (v1) | Sibling repo — v1 template library backing `lib.moblend.dev` during beta |
-| `moblend-registry` | 7 (long-term) | GitOps naming in PRD 7; may supersede or alias `MoBlend_Lib` post-beta |
-| `MoBlend_TemplateInspector` | 8 | Separate Blender addon repo for template authors; publishes to the registry (lib.moblend.dev) |
+| Repository | PRD(s) | Milestone | Relationship |
+|------------|--------|-----------|--------------|
+| `MoBlend_Studio` (this repo) | 1–4 | M0–M4 | Python/Go monorepo: headless engine, API broker, Wails desktop |
+| `MoBlend_SRE` | 6 | M5 | Sentinel SRE garage + ndx.moblend Kit; agent skills; MCP chat-and-canvas |
+| `MoBlend_OBS` | 5 | M6 | OBS CEF browser-dock panel |
+| `MoBlend_Lib` | 7 (v1) | M4a | Sibling repo — v1 template library backing `lib.moblend.dev` during beta |
+| `moblend-registry` | 7 (long-term) | — | GitOps naming in PRD 7; may supersede or alias `MoBlend_Lib` post-beta |
+| `MoBlend_TemplateInspector` | 8 | parallel | Blender addon for template authors; publishes to the registry (lib.moblend.dev) |
 
 ```
 MoBlend_Studio/
 ├── engine/          # Python: bootstrap, moblend engine, FastAPI broker (PRD 1–3)
 ├── desktop/         # Wails app: Go backend + frontend/ (PRD 4)
 ├── clients/
-│   ├── obs/         # PRD 5 — static HTML/JS for OBS CEF dock
-│   └── sentinel/    # PRD 6 — placeholder; placement TBD
+│   ├── obs/         # Stub → MoBlend_OBS (PRD 5, M6)
+│   └── sentinel/    # Stub → MoBlend_SRE (PRD 6, M5)
 ├── specs/
 ├── scripts/
 └── ROADMAP.md
@@ -154,4 +156,4 @@ Project nomenclature. Codenames (**Platform**, **Broker**, **Studio**, **Sentine
 
 ## **Build Order**
 
-See [ROADMAP.md](../ROADMAP.md) for the milestone sequence (M0 scaffold → M1 engine → M2 broker → M3 desktop MVP → **M3a persistence** → M4 registry → M5 OBS → M6 Sentinel) and the per-milestone "Done when" gates.
+See [ROADMAP.md](../ROADMAP.md) for the milestone sequence (M0 scaffold → M1 engine → M2 broker → M3 desktop MVP → **M3a persistence** → M4 registry → **M5 Sentinel SRE / Kit** → **M6 OBS**) and the per-milestone "Done when" gates.
